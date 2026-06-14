@@ -190,6 +190,14 @@
                     <form id="recordForm" onsubmit="addOrUpdateRecord(event)" class="space-y-4 flex-grow flex flex-col">
                         <input type="hidden" id="editRecordId" value="">
                         
+                        <div id="editCardArea" class="hidden bg-py-50 p-3 rounded-xl border border-py-200 mb-1">
+                            <label class="block text-[11px] font-bold text-py-800 mb-1.5 flex items-center gap-1">
+                                <i class="fa-solid fa-folder-tree"></i> 소속 도장판 변경
+                            </label>
+                            <select id="editCardSelect" class="w-full border border-py-200 bg-white p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 font-medium text-slate-700">
+                            </select>
+                        </div>
+                        
                         <div>
                             <label class="block text-xs font-semibold text-slate-500 mb-1">관극 날짜</label>
                             <input type="date" id="perfDate" min="2026-06-10" max="2026-09-06" required onchange="handleDateChange()"
@@ -273,7 +281,16 @@
                     </button>
                 </div>
                 
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-2 md:px-6 mb-4 gap-3">
+                <div class="flex justify-end gap-3 px-2 md:px-6 mb-2 text-[10px] text-slate-500 font-medium">
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 bg-slate-50 border border-slate-200 inline-block rounded-sm"></span>미예매
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 bg-py-600 border border-py-700 inline-block rounded-sm shadow-sm"></span>예매 완료
+                    </span>
+                </div>
+                
+                <div class="flex justify-end px-2 md:px-6 mb-4 w-full">
                     <div class="flex gap-2 w-full md:w-auto">
                         <select id="calFilterP" onchange="updateCalFilter()" class="flex-1 md:w-28 text-[8px] md:text-xs border border-slate-200 bg-slate-50 rounded-lg p-1.5 text-slate-700 font-medium focus:outline-none focus:border-py-500 cursor-pointer transition">
                             <option value="">박열</option><option value="손유동">손유동</option><option value="현석준">현석준</option><option value="백기범">백기범</option>
@@ -284,14 +301,6 @@
                         <select id="calFilterR" onchange="updateCalFilter()" class="flex-1 md:w-28 text-[8px] md:text-xs border border-slate-200 bg-slate-50 rounded-lg p-1.5 text-slate-700 font-medium focus:outline-none focus:border-py-500 cursor-pointer transition">
                             <option value="">류지</option><option value="박영수">박영수</option><option value="장민수">장민수</option><option value="임별">임별</option>
                         </select>
-                    </div>
-                    <div class="flex justify-end gap-3 text-[10px] text-slate-500 font-medium w-full md:w-auto">
-                        <span class="flex items-center gap-1.5">
-                            <span class="w-3 h-3 bg-slate-50 border border-slate-200 inline-block rounded-sm"></span>미예매
-                        </span>
-                        <span class="flex items-center gap-1.5">
-                            <span class="w-3 h-3 bg-py-600 border border-py-700 inline-block rounded-sm shadow-sm"></span>예매 완료
-                        </span>
                     </div>
                 </div>
                 
@@ -695,7 +704,16 @@
             const r = appData.records.find(rec => rec.id === id); if (!r) return;
             const groupId = r.visitGroupId || r.id;
             if (appData.records.filter(rec => (rec.visitGroupId || rec.id) === groupId).length > 1) return alert('분할 적립된 기록은 개별 수정이 불가합니다. 삭제 후 다시 등록해주세요.');
-            document.getElementById('editRecordId').value = r.id; document.getElementById('perfDate').value = r.date; handleDateChange();
+            
+            document.getElementById('editRecordId').value = r.id; 
+            
+            const cardSel = document.getElementById('editCardSelect');
+            cardSel.innerHTML = appData.cards.map((c, i) => `<option value="${c.id}">📁 도장판 #${i+1} (현재 ${c.stamps}개)</option>`).join('');
+            cardSel.value = r.cardId;
+            document.getElementById('editCardArea').classList.remove('hidden');
+            
+            document.getElementById('perfDate').value = r.date; handleDateChange();
+
             const ts = document.getElementById('perfTime'), pureTime = r.time.replace(' (수동)', '');
             if(!Array.from(ts.options).some(opt => opt.value === pureTime)) ts.innerHTML += `<option value="${pureTime}">${pureTime} (수동)</option>`;
             ts.value = pureTime;
@@ -707,7 +725,8 @@
 
         function cancelEdit() {
             document.getElementById('editRecordId').value = ''; document.getElementById('recordForm').reset();
-            const t = new Date(); 
+            document.getElementById('editCardArea').classList.add('hidden');
+            const t = new Date();
             let defaultDate = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
             if (defaultDate < '2026-06-10') defaultDate = '2026-06-10';
             if (defaultDate > '2026-09-06') defaultDate = '2026-09-06';
@@ -739,6 +758,8 @@
                 if(rIndex > -1) {
                     const r = appData.records[rIndex];
                     if (!r.useCoupon && useCoupon && appData.coupons <= 0) return alert('할인권이 부족합니다.');
+                    
+                    r.cardId = Number(document.getElementById('editCardSelect').value);
                     r.date = date; r.time = time; r.parkyeol = parkyeol; r.fumiko = fumiko; r.ryuji = ryuji; 
                     r.seat = seat; r.qty = targetQty; r.useCoupon = useCoupon;
                 }
