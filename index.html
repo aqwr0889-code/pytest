@@ -1059,7 +1059,7 @@
 
                 let cellZ = (eventsByDate[dateStr] && centerDates.has(dateStr)) ? 'z-20' : 'z-0';
 
-                let dayHtml = `<div class="bg-white min-h-[70px] md:min-h-[120px] pb-1 md:pb-2 flex flex-col relative group min-w-0 ${cellZ}">
+                let dayHtml = `<div class="bg-slate-50 min-h-[70px] md:min-h-[120px] pb-1 md:pb-2 flex flex-col relative group min-w-0 ${cellZ}">
                     ${dayNumHtml}`;
 
                 if (eventsByDate[dateStr]) {
@@ -1110,7 +1110,7 @@
             const totalCells = emptyCells + daysInMonth;
             const remaining = 7 - (totalCells % 7);
             if (remaining < 7) {
-                for(let i=0; i<remaining; i++) html += `<div class="bg-white min-h-[70px] md:min-h-[120px]"></div>`;
+                for(let i=0; i<remaining; i++) html += `<div class="bg-slate-50 min-h-[70px] md:min-h-[120px]"></div>`;
             }
             document.getElementById('calendarGrid').innerHTML = html;
         }
