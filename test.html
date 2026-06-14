@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뮤지컬 박열｜정산 시트</title>
+    <script src="https://cdn.tailwindcss.com/3.4.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" 
+          integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" 
+          crossorigin="anonymous" 
+          referrerpolicy="no-referrer" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" 
+        integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" 
+        crossorigin="anonymous" 
+        referrerpolicy="no-referrer"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        py: {
+                            50: '#F7F5F3', 100: '#EBE5E0', 200: '#D6C8BF', 300: '#C2AA9D',
+                            400: '#AD8D7B', 500: '#A67F68', 600: '#8A6854', 700: '#736B66', 
+                            800: '#5C5450', 900: '#403B38',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @font-face {
+            font-family: 'Paperlogy';
+            src: url('./Paperlogy-5Medium.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Baekbeom';
+            src: url('./baekbeom.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body, input, select, button, textarea { 
+            font-family: 'Paperlogy', "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; 
+        }
+        #export-container, #export-container * {
+            font-family: 'Baekbeom', sans-serif !important;
+        }
+        
+        body { background-color: #f8fafc; letter-spacing: 0.5px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        input[type="date"] { box-sizing: border-box; max-width: 100%; -webkit-appearance: none; }
+        
+        .heatmap-container { width: 100%; overflow-x: auto; padding-bottom: 10px; display: flex; justify-content: center; }
+        .heatmap-container > div { width: max-content; min-width: 100%; margin: 0 auto; display: flex; flex-direction: column; align-items: center; padding: 0 30px; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px);
+            z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media screen and (max-width: 768px) {
+            input[type="date"], input[type="text"], select { font-size: 16px !important; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 text-slate-800">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+        <header class="bg-gradient-to-r from-py-900 to-py-800 text-py-50 p-6 rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight flex items-center gap-2">
+                    <span class="text-xl">🧨</span> 뮤지컬 &lt;박열&gt;
+                </h1>
+                <p class="text-py-200 text-xs mt-1">2026-06-10 ~ 2026-09-06 | 링크아트센터드림 드림4관</p>
+                
+                <div class="mt-3 flex items-center gap-2 relative">
+                    <button onclick="exportData()" class="text-[10px] bg-py-800 border border-py-700 hover:bg-py-700 px-2.5 py-1 rounded text-py-100 transition"><i class="fa-solid fa-download mr-1"></i>데이터 백업</button>
+                    <label class="cursor-pointer text-[10px] bg-py-800 border border-py-700 hover:bg-py-700 px-2.5 py-1 rounded text-py-100 transition">
+                        <i class="fa-solid fa-upload mr-1"></i>데이터 복원
+                        <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
+                    </label>
+                    <div class="relative group inline-block">
+                        <button class="text-py-300 hover:text-white text-xs p-1 focus:outline-none">
+                            <i class="fa-solid fa-circle-info"></i>
+                        </button>
+                        <div class="absolute top-full left-0 mt-2 w-[280px] bg-slate-950 text-slate-200 text-[11px] p-3 rounded-xl shadow-xl border border-slate-700 hidden group-hover:block z-50 space-y-1.5 leading-relaxed text-left">
+                            <p class="font-bold text-py-500 border-b border-slate-800 pb-1 flex items-center gap-1">
+                                <i class="fa-solid fa-gear"></i> 데이터 백업/복원 안내
+                            </p>
+                            <p><strong>📥 데이터 백업:</strong> 현재까지 기록한 모든 정보(도장판, 할인권 수량, 관극 일지)를 <code>parkyeol_backup.json</code> 파일로 기기에 다운로드합니다.</p>
+                            <p><strong>📤 데이터 복원:</strong> 백업해둔 JSON 파일을 선택하여 불러옵니다. 기존 입력 정보는 사라지고 백업 시점의 상태로 완벽하게 복구됩니다.</p>
+                            <p class="text-[10px] text-slate-400 pt-0.5 border-t border-slate-800">※ 기기를 변경하거나 브라우저 쿠키/캐시를 청소하기 전에 반드시 파일을 백업해 보관해 두세요!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="fullReset()" class="bg-py-800/50 border border-rose-900/50 text-rose-300 hover:bg-rose-900 hover:text-white px-3 py-2 rounded-xl text-xs transition flex flex-col justify-center items-center shadow-inner group">
+                    <i class="fa-solid fa-rotate-right mb-1 group-hover:animate-spin"></i> 전체 리셋
+                </button>
+                
+                <div class="bg-py-900 border border-py-700 px-4 py-2 rounded-xl text-center shadow-inner relative group min-w-[110px]">
+                    <span class="text-[11px] block text-py-300 font-medium">40% 할인권</span>
+                    <span id="globalCouponCount" class="text-lg font-bold text-py-400">0장</span>
+                    <div class="absolute inset-0 bg-py-900/90 hidden group-hover:flex items-center justify-center rounded-xl gap-2 backdrop-blur-sm border border-py-700">
+                        <button onclick="adjustTicket('coupons', -1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-rose-500 transition">-</button>
+                        <button onclick="adjustTicket('coupons', 1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-emerald-500 transition">+</button>
+                    </div>
+                </div>
+
+                <div class="bg-py-900 border border-py-700 px-4 py-2 rounded-xl text-center shadow-inner relative group min-w-[110px]">
+                    <span class="text-[11px] block text-py-300 font-medium">OST 교환권</span>
+                    <span id="globalOstCount" class="text-lg font-bold text-amber-400">0장</span>
+                    <div class="absolute inset-0 bg-py-900/90 hidden group-hover:flex items-center justify-center rounded-xl gap-2 backdrop-blur-sm border border-py-700">
+                        <button onclick="adjustTicket('ostTickets', -1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-rose-500 transition">-</button>
+                        <button onclick="adjustTicket('ostTickets', 1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-emerald-500 transition">+</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex border-b border-slate-200 gap-1 md:gap-2 bg-white p-1.5 md:p-2 rounded-xl shadow-sm w-full">
+            <button onclick="switchTab('logSheet')" id="btn-logSheet" class="tab-btn flex-1 px-1 md:px-4 py-2 md:py-2.5 font-bold text-xs md:text-sm rounded-lg transition-all bg-py-500 text-white shadow-sm flex flex-col md:flex-row items-center justify-center gap-1 md:gap-1.5 break-keep">
+                <i class="fa-solid fa-pen-to-square"></i> <span>관극 기록</span>
+            </button>
+            <button onclick="switchTab('calendarSheet')" id="btn-calendarSheet" class="tab-btn flex-1 px-1 md:px-4 py-2 md:py-2.5 font-medium text-xs md:text-sm rounded-lg text-slate-600 hover:bg-slate-50 transition-all flex flex-col md:flex-row items-center justify-center gap-1 md:gap-1.5 break-keep">
+                <i class="fa-solid fa-calendar-days"></i> <span>캘린더</span>
+            </button>
+            <button onclick="switchTab('settlementSheet')" id="btn-settlementSheet" class="tab-btn flex-1 px-1 md:px-4 py-2 md:py-2.5 font-medium text-xs md:text-sm rounded-lg text-slate-600 hover:bg-slate-50 transition-all flex flex-col md:flex-row items-center justify-center gap-1 md:gap-1.5 break-keep">
+                <i class="fa-solid fa-chart-pie"></i> <span>관극 정산</span>
+            </button>
+        </div>
+
+        <div id="logSheet" class="tab-content active">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-stamp text-py-500"></i> 보유 도장판
+                        </h2>
+                        <button onclick="createNewCard()" class="text-xs bg-py-50 text-py-600 hover:bg-py-100 px-2.5 py-1.5 rounded-lg font-semibold transition shadow-sm">
+                            + 추가
+                        </button>
+                    </div>
+                    <div id="cardContainer" class="space-y-3 flex-grow overflow-y-auto max-h-[400px] pr-1"></div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col relative">
+                    <div id="scheduleLoadingOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-2xl">
+                        <i class="fa-solid fa-spinner fa-spin text-2xl text-py-500 mb-2"></i>
+                        <span class="text-xs font-bold text-slate-600 mt-2">스케줄 불러오는 중...</span>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center gap-1.5">
+                            <h2 class="text-sm font-bold text-slate-900 flex items-center gap-1.5" id="formTitle">
+                                <i class="fa-solid fa-pen text-py-500"></i> 관극 기록
+                            </h2>
+                             <div class="relative group inline-block">
+                                <i class="fa-solid fa-circle-question text-slate-400 hover:text-py-500 text-sm cursor-pointer transition"></i>
+                                <div class="absolute bottom-full left-0 mb-2 w-[270px] bg-slate-800 text-slate-100 text-[11px] p-3.5 rounded-xl shadow-xl hidden group-hover:block z-50 leading-relaxed text-left font-normal border border-slate-700">
+                                    <p class="font-bold text-py-300 border-b border-slate-700 pb-1 mb-2 flex items-center gap-1">
+                                        <i class="fa-solid fa-lightbulb"></i> 기록 작성 방법
+                                    </p>
+                                    <ol class="list-decimal pl-4 space-y-1.5 text-slate-300">
+                                        <li>적립할 <strong>도장판을 선택</strong>하여 활성화합니다.</li>
+                                        <li>관극 <strong>날짜와 회차, 좌석 정보</strong>를 입력합니다.</li>
+                                        <li>적립할 <strong>도장 개수</strong>와 <strong>할인권 사용 여부</strong>를 체크합니다.</li>
+                                        <li>하단의 <strong>[저장 및 적립]</strong>을 누르면 완료!</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="cancelEditBtn" onclick="cancelEdit()" class="text-[10px] bg-slate-100 text-slate-500 hover:bg-slate-200 px-2 py-1 rounded hidden transition">수정 취소</button>
+                    </div>
+                    
+                    <form id="recordForm" onsubmit="addOrUpdateRecord(event)" class="space-y-4 flex-grow flex flex-col">
+                        <input type="hidden" id="editRecordId" value="">
+                        
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">관극 날짜</label>
+                            <input type="date" id="perfDate" min="2026-06-10" max="2026-09-06" required onchange="handleDateChange()"
+                                   class="w-full border border-slate-200 p-2 rounded-xl text-sm focus:outline-none focus:border-py-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">회차 선택</label>
+                            <select id="perfTime" required onchange="handleTimeChange()" class="w-full border border-slate-200 p-2 rounded-xl text-sm focus:outline-none focus:border-py-500">
+                                <option value="">날짜를 먼저 선택하세요</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">박열</label>
+                                <select id="castParkyeol" class="w-full border border-slate-200 p-2 rounded-xl text-sm bg-white cursor-pointer focus:outline-none focus:border-py-500 transition-colors hover:bg-slate-50">
+                                    <option value="손유동">손유동</option><option value="현석준">현석준</option><option value="백기범">백기범</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">가네코 후미코</label>
+                                <select id="castFumiko" class="w-full border border-slate-200 p-2 rounded-xl text-sm bg-white cursor-pointer focus:outline-none focus:border-py-500 transition-colors hover:bg-slate-50">
+                                    <option value="최수진">최수진</option><option value="허윤슬">허윤슬</option><option value="임예진">임예진</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">류지</label>
+                                <select id="castRyuji" class="w-full border border-slate-200 p-2 rounded-xl text-sm bg-white cursor-pointer focus:outline-none focus:border-py-500 transition-colors hover:bg-slate-50">
+                                    <option value="박영수">박영수</option><option value="장민수">장민수</option><option value="임별">임별</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">좌석 정보</label>
+                            <input type="text" id="seatInfo" placeholder="예: A10, H8 (미입력 시 '관극 예정')" 
+                                class="w-full border border-slate-200 p-2 rounded-xl text-sm focus:outline-none focus:border-py-500 uppercase">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3 mt-auto pt-2" id="stampSettingsArea">
+                            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                <label class="block text-[10px] font-semibold text-slate-500 mb-1">도장 개수</label>
+                                <select id="stampsEarned" class="w-full bg-white border border-slate-200 p-1 rounded-lg text-xs">
+                                    <option value="1">1개</option><option value="2">2개</option><option value="3">3개</option>
+                                </select>
+                            </div>
+                            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-center">
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="useCoupon" onchange="toggleCouponCheckbox()" class="w-3.5 h-3.5 text-py-500 rounded">
+                                    <span class="text-[11px] font-semibold text-slate-700">할인권 사용</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="w-full bg-slate-900 text-white py-2.5 rounded-xl hover:bg-slate-800 transition text-sm font-medium mt-2">
+                            💾 저장 및 적립
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
+                    <h2 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-1.5">
+                        <i class="fa-solid fa-list-ol text-py-500"></i> 관극 타임라인
+                    </h2>
+                    <div class="flex-grow overflow-y-auto max-h-[450px] pr-1">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <tbody id="recordTableBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="calendarSheet" class="tab-content">
+            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
+                <div class="flex justify-between items-center mb-2 px-2 md:px-6">
+                    <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-py-100 hover:text-py-700 flex items-center justify-center transition shadow-sm">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <h2 id="calendarMonthLabel" class="text-xl font-bold text-slate-800 tracking-wide">2026년 6월</h2>
+                    <button onclick="changeMonth(1)" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-py-100 hover:text-py-700 flex items-center justify-center transition shadow-sm">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-2 md:px-6 mb-4 gap-3">
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <select id="calFilterP" onchange="updateCalFilter()" class="flex-1 md:w-28 text-[10px] md:text-xs border border-slate-200 bg-slate-50 rounded-lg p-1.5 text-slate-700 font-medium focus:outline-none focus:border-py-500 cursor-pointer transition">
+                            <option value="">박열 (전체)</option><option value="손유동">손유동</option><option value="현석준">현석준</option><option value="백기범">백기범</option>
+                        </select>
+                        <select id="calFilterF" onchange="updateCalFilter()" class="flex-1 md:w-28 text-[10px] md:text-xs border border-slate-200 bg-slate-50 rounded-lg p-1.5 text-slate-700 font-medium focus:outline-none focus:border-py-500 cursor-pointer transition">
+                            <option value="">후미코 (전체)</option><option value="최수진">최수진</option><option value="허윤슬">허윤슬</option><option value="임예진">임예진</option>
+                        </select>
+                        <select id="calFilterR" onchange="updateCalFilter()" class="flex-1 md:w-28 text-[10px] md:text-xs border border-slate-200 bg-slate-50 rounded-lg p-1.5 text-slate-700 font-medium focus:outline-none focus:border-py-500 cursor-pointer transition">
+                            <option value="">류지 (전체)</option><option value="박영수">박영수</option><option value="장민수">장민수</option><option value="임별">임별</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end gap-3 text-[10px] text-slate-500 font-medium w-full md:w-auto">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 bg-slate-50 border border-slate-200 inline-block rounded-sm"></span>미예매
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 bg-py-600 border border-py-700 inline-block rounded-sm shadow-sm"></span>예매 완료
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="w-full overflow-x-auto pb-4">
+                    <div class="min-w-[340px] md:min-w-full border border-slate-200 bg-slate-200 grid grid-cols-7 gap-px rounded-xl overflow-hidden shadow-inner" id="calendarGrid">
+                        </div>
+                </div>
+                
+                <div class="px-2 md:px-6 mt-1 text-right text-[10px] text-slate-400 tracking-tight">
+                    *실제와 다르거나 변경된 스케줄이 반영되지 않을 수 있습니다.<br>
+                    참고용으로만 사용 바라며 문의 사항은 DM 부탁드립니다.
+                </div>
+            </div>
+        </div>
+
+        <div id="settlementSheet" class="tab-content space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-3 border-b border-slate-100 pb-4">
+                    <h2 class="text-base font-bold text-slate-900 flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-line text-py-500"></i> 캐스트 및 페어 정산
+                    </h2>
+                    <button id="exportImageBtn" onclick="openPreviewModal()" class="text-xs bg-py-800 text-py-50 px-4 py-2 rounded-xl hover:bg-py-900 transition flex items-center gap-2 shadow-sm font-bold">
+                        <i class="fa-solid fa-image text-py-300"></i> 정산표 이미지로 저장
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/60">
+                        <h3 class="text-xs font-bold text-slate-700 mb-3 border-b pb-1.5 flex justify-between items-center">
+                            <span>🧨 박열</span>
+                        </h3>
+                        <div id="reportParkyeol" class="space-y-2"></div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/60">
+                        <h3 class="text-xs font-bold text-slate-700 mb-3 border-b pb-1.5 flex justify-between items-center">
+                            <span>🏴 가네코 후미코</span>
+                        </h3>
+                        <div id="reportFumiko" class="space-y-2"></div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/60">
+                        <h3 class="text-xs font-bold text-slate-700 mb-3 border-b pb-1.5 flex justify-between items-center">
+                            <span>🔫 류지</span>
+                        </h3>
+                        <div id="reportRyuji" class="space-y-2"></div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/60 flex flex-col">
+                        <h3 class="text-xs font-bold text-slate-700 mb-3 border-b pb-1.5 flex justify-between items-center">
+                            <span>👥 페어 조합</span>
+                            <span id="totalPairCount" class="text-[10px] text-slate-400 font-normal">총 0회</span>
+                        </h3>
+                        <div id="reportPair" class="space-y-2 flex-grow overflow-y-auto max-h-[150px] pr-1"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                <div class="flex flex-col border-b border-slate-100 pb-4 mb-6">
+                    <h2 class="text-slate-900 font-bold text-lg flex items-center justify-start gap-2 mb-4">
+                        <i class="fa-solid fa-map-location-dot text-slate-700"></i> 좌석표
+                    </h2>
+                    <div class="flex justify-center flex-wrap gap-x-4 gap-y-2 text-[10px] md:text-[11px] font-medium text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-200 shadow-sm w-max max-w-full mx-auto">
+                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 bg-slate-100 border border-slate-200 rounded-sm"></div><span>0회</span></div>
+                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 bg-red-200 border border-red-300 rounded-sm"></div><span>1회</span></div>
+                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 bg-yellow-200 border border-yellow-300 rounded-sm"></div><span>2회</span></div>
+                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 bg-green-200 border border-green-300 rounded-sm"></div><span>3회</span></div>
+                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 bg-blue-200 border border-blue-300 rounded-sm"></div><span>4회</span></div>
+                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 bg-py-500 border border-py-600 rounded-sm"></div><span>5회+</span></div>
+                    </div>
+                </div>
+
+                <div class="heatmap-container">
+                    <div class="flex flex-col items-center">
+                        <div class="w-[200px] md:w-[300px] mx-auto bg-slate-800 text-white text-center text-[10px] md:text-xs py-1.5 md:py-2 rounded-b-xl md:rounded-b-2xl tracking-widest font-bold shadow-sm mb-4 md:mb-8">
+                            S T A G E
+                        </div>
+                        <div class="space-y-[2px] md:space-y-1 w-max mx-auto flex flex-col items-center pb-8 relative" id="seating-grid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="imagePreviewModal" class="modal-overlay z-[120]" onclick="if(event.target === this) closePreviewModal()">
+        <div class="bg-white rounded-2xl p-5 w-full max-w-4xl flex flex-col items-center shadow-2xl relative">
+            <div class="flex justify-between w-full mb-4 items-center">
+                <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-image text-py-500 mr-2"></i>정산표 미리보기</h3>
+                <button onclick="closePreviewModal()" class="text-slate-400 hover:text-rose-500 transition text-2xl px-2">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="w-full bg-slate-100 rounded-xl p-2 mb-5 flex items-center justify-center min-h-[300px] border border-slate-200">
+                <img id="previewImage" src="" class="max-w-full h-auto rounded shadow-sm hidden" alt="정산표 미리보기">
+                <div id="previewLoading" class="text-slate-400 flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl"></i>
+                    <span class="text-sm font-medium">이미지를 생성하고 있습니다...</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3 w-full justify-end">
+                <button onclick="closePreviewModal()" class="px-5 py-2.5 bg-slate-200 text-slate-700 hover:bg-slate-300 rounded-xl font-medium transition">취소</button>
+                <button onclick="downloadRenderedImage()" id="finalDownloadBtn" disabled class="px-6 py-2.5 bg-py-800 text-white hover:bg-py-900 rounded-xl font-bold transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
+                    <i class="fa-solid fa-download"></i> 이미지 저장하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scheduleDetailModal" class="modal-overlay z-[110]" onclick="if(event.target === this) closeScheduleDetailModal()">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm flex flex-col shadow-2xl relative">
+            <button onclick="closeScheduleDetailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition text-xl px-2">
+                <i class="fa-solid fa-times"></i>
+            </button>
+            <div id="scheduleDetailContent"></div>
+        </div>
+    </div>
+
+    <div id="export-container" style="position: fixed; top: 0; left: -9999px; width: 1400px; height: auto; z-index: -9999; font-family: 'Baekbeom', sans-serif; pointer-events: none;"></div>
+
+    <footer class="mt-12 mb-8 pt-6 border-t border-slate-200 text-center text-[11px] text-slate-400 leading-relaxed">
+        <p class="mb-1 text-slate-500 font-medium">본 사이트는 불령사 회원님들을 지원하기 위해 제작되었으며, 수익 창출을 목적으로 하지 않습니다.</p>
+        <p class="mt-3"><span class="inline-block mx-1">Font by paperlogy</span> | <span class="inline-block mx-1">Icons by FontAwesome</span> | <span class="inline-block mx-1">Powered by Tailwind CSS & html2canvas</span></p>
+        <p class="mt-3 flex items-center justify-center gap-1"><i class="fa-solid fa-shield-halved text-slate-300"></i>입력된 데이터는 접속하신 기기의 브라우저에서만 확인이 가능합니다.</p>
+        <p class="mt-4 font-semibold text-slate-300">&copy; 2026 <a href="https://x.com/ye_tarou" target="_blank" class="hover:text-py-500 hover:underline transition-colors duration-200">@ye_tarou by X</a>. All rights reserved.</p>
+    </footer>
+
+    <script>
+        function recalculateState() {
+            sortRecordsChronologically();
+
+            appData.cards.forEach(c => c.stamps = 0);
+            appData.coupons = 0;
+            appData.ostTickets = 0;
+
+            appData.records.forEach(record => {
+                if (record.useCoupon) {
+                    appData.coupons--;
+                }
+
+                let card = appData.cards.find(c => c.id === record.cardId);
+                
+                if (!card) {
+                    card = appData.cards[0]; 
+                    if (!card) {
+                        card = { id: Date.now(), stamps: 0, isActive: true };
+                        appData.cards.push(card);
+                    }
+                    record.cardId = card.id;
+                }
+
+                const oldStamps = card.stamps;
+                card.stamps += record.qty;
+
+                if (oldStamps < 3 && card.stamps >= 3) appData.coupons += 2;
+                if (oldStamps < 7 && card.stamps >= 7) appData.ostTickets += 1;
+            });
+        }
+
+        let castSchedule = {};
+        let eventsByDate = {};
+        
+        let appData = JSON.parse(localStorage.getItem('parkyeolSheetStorage')) || {
+            cards: [{ id: Date.now(), stamps: 0, isActive: true }], coupons: 0, ostTickets: 0, records: []
+        };
+
+        let globalStats = null;
+        let generatedImageUrl = '';
+
+        const __todayForCal = new Date();
+        let calYear = 2026;
+        let calMonth = __todayForCal.getMonth();
+        if (__todayForCal.getFullYear() < 2026 || calMonth < 5) calMonth = 5;
+        else if (__todayForCal.getFullYear() > 2026 || calMonth > 8) calMonth = 8;
+        let currentCalDate = new Date(calYear, calMonth, 1);
+
+        const ribbonColors = [
+            'bg-blue-100 text-blue-800 border-blue-200',
+            'bg-pink-100 text-pink-800 border-pink-200',
+            'bg-teal-100 text-teal-800 border-teal-200',
+            'bg-yellow-100 text-yellow-800 border-yellow-200',
+            'bg-purple-100 text-purple-800 border-purple-200',
+            'bg-orange-100 text-orange-800 border-orange-200',
+            'bg-green-100 text-green-800 border-green-200'
+        ];
+        let eventColorMap = {};
+
+        let calFilterP = '', calFilterF = '', calFilterR = '';
+        
+        function updateCalFilter() {
+            calFilterP = document.getElementById('calFilterP').value;
+            calFilterF = document.getElementById('calFilterF').value;
+            calFilterR = document.getElementById('calFilterR').value;
+            renderCalendar();
+        }
+
+        let colorIndex = 0;
+
+        const imagePaths = {
+            poster: './메인 포스터.jpg',
+            pyLogo: './py.webp',
+            actors: {
+                '손유동': './박열_손유동.jpg', '현석준': './박열_현석준.jpg', '백기범': './박열_백기범.jpg',
+                '최수진': './후미코_최수진.jpg', '허윤슬': './후미코_허윤슬.jpg', '임예진': './후미코_임예진.jpg',
+                '박영수': './류지_박영수.jpg', '장민수': './류지_장민수.jpg', '임별': './류지_임별.jpg',
+            }
+        };
+
+        function exportData() {
+            const dataStr = JSON.stringify(appData);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            const exportFileName = `parkyeol_backup_${new Date().toISOString().slice(0,10)}.json`;
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileName);
+            document.body.appendChild(linkElement);
+            linkElement.click();
+            document.body.removeChild(linkElement);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported && imported.cards && imported.records) {
+                        appData = imported;
+                        saveData();
+                        alert('✅ 데이터 복원 완료!');
+                    } else {
+                        alert('🚨 올바른 백업 파일(JSON)이 아닙니다.');
+                    }
+                } catch (err) {
+                    alert('🚨 파일을 읽는 중 오류가 발생했습니다.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        async function loadScheduleFromGoogleSheet() {
+            const sheetId = '1QTDHt94bZkniW1dqwg6esnLq79cuXFHJ_ZSZZpUEQdw';
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`서버 응답 오류 (상태 코드: ${response.status})`);
+
+                const csvText = await response.text();
+                if (csvText.trim().toLowerCase().startsWith('<!doctype html>') || csvText.trim().toLowerCase().startsWith('<html')) {
+                    throw new Error('데이터 대신 웹페이지(HTML)가 반환되었습니다.\n스프레드시트 권한 확인 요망.');
+                }
+                
+                const rows = parseCSV(csvText);
+                
+                rows.forEach((cols, index) => {
+                    if (index === 0 || cols.length < 2) return; 
+                    
+                    let rawDate = cols[0] ? cols[0].trim() : '';
+                    if (!rawDate) return;
+
+                    const nums = rawDate.match(/\d+/g);
+                    if (!nums || nums.length < 2) return; 
+
+                    let mm = (nums.length >= 3 ? nums[1] : nums[0]).padStart(2, '0');
+                    let dd = (nums.length >= 3 ? nums[2] : nums[1]).padStart(2, '0');
+                    const dateStr = `2026-${mm}-${dd}`;
+                    
+                    let timeStr = cols[1] ? cols[1].trim() : '';
+                    if (!timeStr) return;
+                    if (/^\d{1,2}:\d{2}:\d{2}$/.test(timeStr)) timeStr = timeStr.substring(0, 5);
+                    
+                    if (!castSchedule[dateStr]) castSchedule[dateStr] = {};
+                    castSchedule[dateStr][timeStr] = [
+                        cols[2] ? cols[2].trim() : '', 
+                        cols[3] ? cols[3].trim() : '', 
+                        cols[4] ? cols[4].trim() : ''
+                    ];
+
+                    let eventStr = cols[5] ? cols[5].trim() : '';
+                    if (eventStr) {
+                        eventsByDate[dateStr] = eventStr;
+                    }
+                });
+            } catch (error) {
+                console.error('스케줄 로드 실패:', error);
+                alert(`🚨 스케줄 데이터를 불러오지 못했습니다!\n\n${error.message}`);
+            } finally {
+                document.getElementById('scheduleLoadingOverlay').style.display = 'none';
+            }
+        }
+
+        function parseCSV(text) {
+            const result = [];
+            let row = [], inQuotes = false, val = '';
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                if (char === '"' && text[i+1] === '"') { val += '"'; i++; }
+                else if (char === '"') inQuotes = !inQuotes;
+                else if (char === ',' && !inQuotes) { row.push(val); val = ''; }
+                else if (char === '\n' && !inQuotes) { row.push(val); result.push(row); row = []; val = ''; }
+                else if (char !== '\r') val += char;
+            }
+            row.push(val); result.push(row); return result;
+        }
+
+        const getTimeWeight = (timeStr) => {
+            if (timeStr.includes('낮공')) return 1000;
+            if (timeStr.includes('밤공')) return 2000;
+            const match = timeStr.match(/(\d{1,2}):(\d{2})/);
+            return match ? parseInt(match[1], 10) * 60 + parseInt(match[2], 10) : 9999;
+        };
+
+        function sortRecordsChronologically() { appData.records.sort((a, b) => { if (a.date !== b.date) return a.date.localeCompare(b.date); return getTimeWeight(a.time) - getTimeWeight(b.time); }); }
+        
+        function saveData() { 
+            recalculateState();
+            localStorage.setItem('parkyeolSheetStorage', JSON.stringify(appData)); 
+            renderAll(); 
+        }
+
+        function fullReset() { if(confirm("정말 모두 초기화하시겠습니까?")) { appData = { cards: [{ id: Date.now(), stamps: 0, isActive: true }], coupons: 0, ostTickets: 0, records: [] }; saveData(); alert('초기화 완료'); } }
+        function adjustTicket(type, amount) { if (type === 'coupons') appData.coupons = Math.max(0, appData.coupons + amount); else if (type === 'ostTickets') appData.ostTickets = Math.max(0, appData.ostTickets + amount); saveData(); }
+        
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('bg-py-500', 'text-white', 'shadow-sm', 'font-bold'); b.classList.add('text-slate-600', 'hover:bg-slate-50', 'font-medium'); });
+            document.getElementById(tabId).classList.add('active');
+            const tb = document.getElementById(`btn-${tabId}`);
+            tb.classList.remove('text-slate-600', 'hover:bg-slate-50', 'font-medium'); tb.classList.add('bg-py-500', 'text-white', 'shadow-sm', 'font-bold');
+            
+            if (tabId === 'calendarSheet') {
+                const t = new Date();
+                let m = t.getMonth();
+                if (t.getFullYear() < 2026 || m < 5) m = 5;
+                else if (t.getFullYear() > 2026 || m > 8) m = 8;
+                currentCalDate = new Date(2026, m, 1);
+                renderCalendar();
+            }
+        }
+
+        function handleDateChange() {
+            const dateInput = document.getElementById('perfDate').value;
+            const timeSelect = document.getElementById('perfTime');
+            const currentTimeVal = timeSelect.value;
+            timeSelect.innerHTML = '';
+            if (!dateInput) { timeSelect.innerHTML = '<option value="">선택</option>'; return; }
+            
+            const daySchedule = castSchedule[dateInput];
+            let optionsHtml = '<option value="">선택하세요</option>';
+            
+            if (daySchedule) {
+                const availableTimes = Object.keys(daySchedule).sort((a, b) => getTimeWeight(a) - getTimeWeight(b));
+                availableTimes.forEach(t => {
+                    let icon = (t.includes('낮') || getTimeWeight(t) < 1020) ? "🌞" : "🌙";
+                    optionsHtml += `<option value="${t}">${icon} ${t}</option>`;
+                });
+                timeSelect.innerHTML = optionsHtml;
+                if (availableTimes.length === 1) timeSelect.value = availableTimes[0];
+                else if (currentTimeVal && Array.from(timeSelect.options).some(opt => opt.value === currentTimeVal)) timeSelect.value = currentTimeVal;
+            } else {
+                optionsHtml += `<option value="14:00">🌞 14:00 (수동)</option><option value="18:00">🌙 18:00 (수동)</option><option value="20:00">🌙 20:00 (수동)</option>`;
+                timeSelect.innerHTML = optionsHtml;
+            }
+            handleTimeChange();
+        }
+
+        function handleTimeChange() {
+            const date = document.getElementById('perfDate').value, time = document.getElementById('perfTime').value;
+            if (!date || !time || !castSchedule[date] || !castSchedule[date][time]) return;
+            const [p, f, r] = castSchedule[date][time];
+            document.getElementById('castParkyeol').value = p; document.getElementById('castFumiko').value = f; document.getElementById('castRyuji').value = r;
+        }
+
+        function createNewCard() { 
+            appData.cards.forEach(c => c.isActive = false); 
+            appData.cards.push({ id: Date.now(), stamps: 0, isActive: true }); 
+            saveData(); 
+        }
+
+        function switchCard(id) { appData.cards.forEach(c => c.isActive = (c.id === id)); saveData(); }
+        
+        function deleteCard(id, e) {
+            e.stopPropagation(); 
+            if (appData.cards.length <= 1) return alert('최소 하나의 도장판은 유지되어야 합니다.');
+            if (!confirm('이 도장판을 삭제하시겠습니까? 연결된 일지도 함께 삭제됩니다.')) return;
+            
+            appData.records = appData.records.filter(r => r.cardId !== id); 
+            appData.cards = appData.cards.filter(c => c.id !== id);
+            
+            if (appData.cards.length > 0 && !appData.cards.some(c => c.isActive)) {
+                appData.cards[appData.cards.length - 1].isActive = true;
+            }
+            saveData();
+        }
+
+        function toggleCouponCheckbox() { const cb = document.getElementById('useCoupon'); if (cb.checked && appData.coupons <= 0) { alert('할인권이 없습니다.'); cb.checked = false; } }
+        
+        function editRecord(id) {
+            const r = appData.records.find(rec => rec.id === id); if (!r) return;
+            const groupId = r.visitGroupId || r.id;
+            if (appData.records.filter(rec => (rec.visitGroupId || rec.id) === groupId).length > 1) return alert('분할 적립된 기록은 개별 수정이 불가합니다. 삭제 후 다시 등록해주세요.');
+            document.getElementById('editRecordId').value = r.id; document.getElementById('perfDate').value = r.date; handleDateChange();
+            const ts = document.getElementById('perfTime'), pureTime = r.time.replace(' (수동)', '');
+            if(!Array.from(ts.options).some(opt => opt.value === pureTime)) ts.innerHTML += `<option value="${pureTime}">${pureTime} (수동)</option>`;
+            ts.value = pureTime;
+            document.getElementById('castParkyeol').value = r.parkyeol; document.getElementById('castFumiko').value = r.fumiko; document.getElementById('castRyuji').value = r.ryuji;
+            document.getElementById('seatInfo').value = (r.seat === '관극 예정') ? '' : r.seat; document.getElementById('stampsEarned').value = r.qty;
+            document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-amber-500"></i> 기록 수정 중...';
+            document.getElementById('submitBtn').innerText = '🔄 수정된 정보 저장'; document.getElementById('submitBtn').classList.replace('bg-slate-900', 'bg-amber-600'); document.getElementById('cancelEditBtn').classList.remove('hidden');
+        }
+
+        function cancelEdit() {
+            document.getElementById('editRecordId').value = ''; document.getElementById('recordForm').reset();
+            const t = new Date(); 
+            let defaultDate = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+            if (defaultDate < '2026-06-10') defaultDate = '2026-06-10';
+            if (defaultDate > '2026-09-06') defaultDate = '2026-09-06';
+            document.getElementById('perfDate').value = defaultDate; 
+            handleDateChange();
+            document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-pen text-py-500"></i> 관극 기록';
+            document.getElementById('submitBtn').innerText = '💾 저장 및 적립'; document.getElementById('submitBtn').classList.replace('bg-amber-600', 'bg-slate-900'); document.getElementById('cancelEditBtn').classList.add('hidden');
+        }
+
+        function addOrUpdateRecord(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editRecordId').value;
+            const date = document.getElementById('perfDate').value;
+            const time = document.getElementById('perfTime').value.replace(' (수동)', '');
+            const parkyeol = document.getElementById('castParkyeol').value;
+            const fumiko = document.getElementById('castFumiko').value;
+            const ryuji = document.getElementById('castRyuji').value;
+            let seat = document.getElementById('seatInfo').value.toUpperCase().replace(/\s+/g, '');
+            
+            if (!seat || seat === '관극예정') seat = '관극 예정'; 
+            else if (!/^[A-L]([1-9]|1[0-9])$/.test(seat)) return alert('유효하지 않은 좌석명입니다. (예: A10)');
+            if(!time) return alert('회차를 선택해주세요.');
+
+            const targetQty = parseInt(document.getElementById('stampsEarned').value);
+            const useCoupon = document.getElementById('useCoupon').checked;
+
+            if (editId) {
+                const rIndex = appData.records.findIndex(r => String(r.id) === String(editId));
+                if(rIndex > -1) {
+                    const r = appData.records[rIndex];
+                    if (!r.useCoupon && useCoupon && appData.coupons <= 0) return alert('할인권이 부족합니다.');
+                    r.date = date; r.time = time; r.parkyeol = parkyeol; r.fumiko = fumiko; r.ryuji = ryuji; 
+                    r.seat = seat; r.qty = targetQty; r.useCoupon = useCoupon;
+                }
+            } else {
+                if (useCoupon && appData.coupons <= 0) return alert('할인권이 부족합니다.');
+
+                const visitGroupId = Date.now();
+                let remainingStamps = targetQty;
+                let firstChunk = true;
+                
+                let activeCard = appData.cards.find(c => c.isActive);
+                if (!activeCard) {
+                    activeCard = { id: Date.now(), stamps: 0, isActive: true };
+                    appData.cards.push(activeCard);
+                }
+
+                while (remainingStamps > 0) {
+                    let spaceLeft = 7 - activeCard.stamps;
+                    if (spaceLeft === 0) {
+                        activeCard.isActive = false;
+                        activeCard = { id: Date.now() + Math.random(), stamps: 0, isActive: true };
+                        appData.cards.push(activeCard);
+                        spaceLeft = 7;
+                    }
+                    let stampsToApply = Math.min(remainingStamps, spaceLeft);
+                    
+                    activeCard.stamps += stampsToApply;
+                    
+                    appData.records.push({ 
+                        id: Date.now() + Math.random(), 
+                        visitGroupId, 
+                        cardId: activeCard.id,
+                        date, time, parkyeol, fumiko, ryuji, seat, 
+                        qty: stampsToApply, 
+                        useCoupon: firstChunk ? useCoupon : false 
+                    });
+                    remainingStamps -= stampsToApply;
+                    firstChunk = false;
+                }
+            }
+            
+            saveData(); 
+            cancelEdit();
+        }
+
+        function changeMonth(delta) {
+            currentCalDate.setMonth(currentCalDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function showScheduleDetail(date, time) {
+            const cast = castSchedule[date][time];
+            const records = appData.records.filter(r => r.date === date && r.time === time);
+            const evt = eventsByDate[date];
+            
+            let html = `
+                <div class="mb-4 text-center">
+                    <h3 class="text-xl font-bold text-slate-800 tracking-tight">${date} <span class="text-py-500 text-lg">${time}</span></h3>
+                    ${evt ? `<div class="inline-block ${eventColorMap[evt] ? eventColorMap[evt].replace('border-y', '') : 'bg-py-100 text-py-800'} text-xs px-2 py-0.5 rounded-full mt-2 font-bold shadow-sm border">${evt}</div>` : ''}
+                </div>
+                <div class="grid grid-cols-3 gap-2 mb-5 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div class="text-center">
+                        <div class="text-[10px] text-slate-500 font-medium mb-1">박열</div>
+                        <div class="font-bold text-slate-800 text-sm">${cast[0]}</div>
+                    </div>
+                    <div class="text-center border-x border-slate-200">
+                        <div class="text-[10px] text-slate-500 font-medium mb-1">가네코 후미코</div>
+                        <div class="font-bold text-slate-800 text-sm">${cast[1]}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-[10px] text-slate-500 font-medium mb-1">류지</div>
+                        <div class="font-bold text-slate-800 text-sm">${cast[2]}</div>
+                    </div>
+                </div>
+            `;
+
+            if (records.length > 0) {
+                html += `<h4 class="text-xs font-bold text-py-600 mb-2 border-b border-py-100 pb-1.5 flex items-center gap-1"><i class="fa-solid fa-ticket"></i> 나의 예매/관극 정보</h4>`;
+                records.forEach((r, idx) => {
+                    html += `
+                        <div class="flex justify-between items-center bg-white p-3 rounded-lg border border-py-200 mb-2 shadow-sm">
+                            <div class="flex items-center gap-2">
+                                <span class="bg-py-100 text-py-800 text-[10px] px-2 py-0.5 rounded font-bold">좌석</span>
+                                <span class="text-sm font-bold text-slate-800">${r.seat}</span>
+                            </div>
+                            <div class="text-[10px]">
+                                ${r.useCoupon ? '<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded font-bold">할인권 적용 O</span>' : '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded font-bold">할인권 미적용</span>'}
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += `
+                <div class="text-center text-slate-400 text-xs py-3 mb-2 bg-slate-50 rounded-lg border border-slate-100">
+                    <i class="fa-solid fa-folder-open mb-1 text-slate-300"></i><br>등록된 관극 기록이 없습니다.
+                </div>`;
+            }
+
+            let cardOptions = appData.cards.map((c, i) => {
+                let isSelected = c.isActive ? 'selected' : '';
+                return `<option value="${c.id}" ${isSelected}>📁 도장판 #${i+1} (현재 ${c.stamps}개 / 최대 7개)</option>`;
+            }).join('');
+
+            html += `
+                <div class="mt-4 border-t border-slate-200 pt-4">
+                    <h4 class="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-bolt text-py-500"></i> 빠른 관극 기록 추가</h4>
+                    <div class="space-y-2">
+                        <select id="quickCardId" class="w-full border border-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 bg-slate-50 font-medium">
+                            ${cardOptions}
+                        </select>
+                        <input type="text" id="quickSeat" placeholder="좌석 정보 (예: A10, 미입력 시 '관극 예정')" class="w-full border border-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 uppercase">
+                        
+                        <div class="flex gap-2">
+                            <select id="quickStamps" class="flex-1 border border-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500">
+                                <option value="1">도장 1개 적립</option>
+                                <option value="2">도장 2개 적립</option>
+                                <option value="3">도장 3개 적립</option>
+                            </select>
+                            <label class="flex items-center gap-1.5 bg-slate-50 px-2 rounded-lg border border-slate-200 cursor-pointer">
+                                <input type="checkbox" id="quickCoupon" class="w-3.5 h-3.5 text-py-500 rounded">
+                                <span class="text-[10px] font-semibold text-slate-700 whitespace-nowrap">할인권 사용</span>
+                            </label>
+                        </div>
+                        
+                        <button onclick="quickAddRecord('${date}', '${time}', '${cast[0]}', '${cast[1]}', '${cast[2]}')" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold hover:bg-slate-900 transition mt-1">
+                            기록 저장하고 타임라인 보기
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('scheduleDetailContent').innerHTML = html;
+            document.getElementById('scheduleDetailModal').classList.add('active');
+        }
+
+        function closeScheduleDetailModal() {
+            document.getElementById('scheduleDetailModal').classList.remove('active');
+        }
+
+        function quickAddRecord(date, time, parkyeol, fumiko, ryuji) {
+            let seat = document.getElementById('quickSeat').value.toUpperCase().replace(/\s+/g, '');
+            if (!seat) seat = '관극 예정'; 
+            else if (!/^[A-L]([1-9]|1[0-9])$/.test(seat)) return alert('유효하지 않은 좌석명입니다. (예: A10)');
+            
+            const qty = parseInt(document.getElementById('quickStamps').value);
+            const useCoupon = document.getElementById('quickCoupon').checked;
+            
+            const selectedCardId = Number(document.getElementById('quickCardId').value);
+            let activeCard = appData.cards.find(c => c.id === selectedCardId);
+            
+            if (!activeCard) return alert('도장판을 선택해주세요. (생성된 도장판이 없다면 관극 기록 탭에서 추가해주세요)');
+            
+            appData.cards.forEach(c => c.isActive = (c.id === selectedCardId));
+
+            if (useCoupon && appData.coupons <= 0) return alert('할인권이 부족합니다.');
+
+            const visitGroupId = Date.now();
+            let remainingStamps = qty;
+            let firstChunk = true;
+            
+            while (remainingStamps > 0) {
+                let spaceLeft = 7 - activeCard.stamps;
+                if (spaceLeft === 0) {
+                    activeCard.isActive = false;
+                    activeCard = { id: Date.now() + Math.random(), stamps: 0, isActive: true };
+                    appData.cards.push(activeCard);
+                    spaceLeft = 7;
+                }
+                let stampsToApply = Math.min(remainingStamps, spaceLeft);
+                
+                activeCard.stamps += stampsToApply;
+                
+                appData.records.push({ 
+                    id: Date.now() + Math.random(), 
+                    visitGroupId, 
+                    cardId: activeCard.id, 
+                    date, time, parkyeol, fumiko, ryuji, seat, 
+                    qty: stampsToApply, 
+                    useCoupon: firstChunk ? useCoupon : false 
+                });
+                remainingStamps -= stampsToApply;
+                firstChunk = false;
+            }
+            
+            saveData();
+            closeScheduleDetailModal();
+            switchTab('logSheet');
+        }
+
+        function deleteRecord(id) {
+            const r = appData.records.find(rec => rec.id === id); if (!r) return;
+            const groupId = r.visitGroupId || r.id;
+            if (!confirm('관극 일지를 삭제하시겠습니까?')) return;
+            
+            appData.records = appData.records.filter(rec => (rec.visitGroupId || rec.id) !== groupId); 
+            saveData(); 
+        }
+
+        function generateHeatmap() {
+            const seatCounts = {}, uniqueVisits = [], seenGroups = new Set();
+            appData.records.forEach(r => { const gid = r.visitGroupId || r.id; if(!seenGroups.has(gid)) { seenGroups.add(gid); uniqueVisits.push(r); } });
+            uniqueVisits.forEach(r => seatCounts[r.seat] = (seatCounts[r.seat] || 0) + 1);
+
+            const getColorClass = (c) => c===0?'bg-slate-100 text-slate-300 border border-slate-200':c===1?'bg-red-200 text-red-900 border border-red-300':c===2?'bg-yellow-200 text-yellow-900 border border-yellow-300':c===3?'bg-green-200 text-green-900 border border-green-300':c===4?'bg-blue-200 text-blue-900 border border-blue-300':'bg-py-500 text-white font-bold border border-py-600 shadow-sm';
+            
+            const b = (id, l) => `<div class="w-[10px] h-[10px] sm:w-[13px] sm:h-[13px] md:w-[18px] md:h-[18px] lg:w-[22px] lg:h-[22px] text-[5px] sm:text-[6px] md:text-[8px] lg:text-[10px] rounded-[2px] md:rounded flex items-center justify-center transition-all flex-shrink-0 ${getColorClass(seatCounts[id]||0)}" title="${id}석 (${seatCounts[id]||0}회)">${l}</div>`;
+            const eb = (n) => Array(n).fill(`<div class="w-[10px] h-[10px] sm:w-[13px] sm:h-[13px] md:w-[18px] md:h-[18px] lg:w-[22px] lg:h-[22px] bg-transparent flex-shrink-0"></div>`).join('');
+            
+            const wrap = (name, inn) => `<div class="flex items-center justify-center w-full relative py-[1px]">
+                <span class="absolute -left-5 sm:-left-6 md:-left-7 lg:-left-8 text-[8px] md:text-[10px] text-slate-400 font-bold w-4 text-right">${name}</span>
+                <div class="flex gap-[1px] md:gap-[2px] lg:gap-[3px] justify-center">${inn}</div>
+                <span class="absolute -right-5 sm:-right-6 md:-right-7 lg:-right-8 text-[8px] md:text-[10px] text-slate-400 font-bold w-4 text-left">${name}</span>
+            </div>`;
+
+            let h = '';
+            const rng = (r, m) => { let ht=''; for(let s=1;s<=m;s++) ht+=b(`${r}${s}`,s); return ht; };
+            h += wrap('A', rng('A',19)) + wrap('B', rng('B',19)) + wrap('C', rng('C',18)) + wrap('D', rng('D',19)) + `<div class="w-full h-3 md:h-6"></div>`;
+            h += wrap('E', eb(2)+rng('E',7).replace(/E/g,'E')+eb(1)+rng('E',17).substring(rng('E',7).length)); 
+            h += wrap('F', eb(2)+rng('F',7).replace(/F/g,'F')+eb(1)+rng('F',17).substring(rng('F',7).length)); 
+            h += wrap('G', eb(2)+rng('G',7).replace(/G/g,'G')+eb(1)+rng('G',17).substring(rng('G',7).length));
+
+            const rhij = (r) => { let ht=''; for(let s=1;s<=9;s++) ht+=b(`${r}${s}`,s); ht+=eb(1); for(let s=10;s<=19;s++) ht+=b(`${r}${s}`,s); return ht; };
+            h += wrap('H', rhij('H')) + wrap('I', rhij('I')) + wrap('J', rhij('J'));
+            
+            let hk=''; for(let s=1;s<=9;s++) hk+=b(`K${s}`,s); hk+=eb(1); for(let s=10;s<=18;s++) hk+=b(`K${s}`,s); hk+=eb(1); h += wrap('K', hk);
+            let hl=eb(2); for(let s=1;s<=7;s++) hl+=b(`L${s}`,s); hl+=eb(11); h += wrap('L', hl);
+
+            document.getElementById('seating-grid').innerHTML = h;
+        }
+
+        function renderCalendar() {
+            const year = currentCalDate.getFullYear();
+            const month = currentCalDate.getMonth();
+            document.getElementById('calendarMonthLabel').innerText = `${year}년 ${month + 1}월`;
+
+            const firstDayStr = new Date(year, month, 1).getDay();
+            const emptyCells = firstDayStr === 0 ? 6 : firstDayStr - 1;
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            let html = `
+                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">월</div>
+                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">화</div>
+                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">수</div>
+                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">목</div>
+                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">금</div>
+                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-blue-500 border-b border-slate-200">토</div>
+                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-rose-500 border-b border-slate-200">일</div>
+            `;
+
+            for(let i=0; i<emptyCells; i++) {
+                html += `<div class="bg-white min-h-[70px] md:min-h-[120px]"></div>`;
+            }
+
+            let spans = [];
+            let currentSpan = [];
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const ev = eventsByDate[dateStr];
+                
+                if (ev) {
+                    if (currentSpan.length === 0 || currentSpan[0].ev === ev) {
+                        currentSpan.push({d, ev, dateStr});
+                    } else {
+                        spans.push(currentSpan);
+                        currentSpan = [{d, ev, dateStr}];
+                    }
+                    if (!eventColorMap[ev]) {
+                        eventColorMap[ev] = ribbonColors[colorIndex % ribbonColors.length];
+                        colorIndex++;
+                    }
+                } else {
+                    if (currentSpan.length > 0) spans.push(currentSpan);
+                    currentSpan = [];
+                }
+            }
+            if (currentSpan.length > 0) spans.push(currentSpan);
+
+            const centerDates = new Set();
+            spans.forEach(span => {
+                const midIndex = Math.floor((span.length - 1) / 2);
+                centerDates.add(span[midIndex].dateStr);
+            });
+
+            const realToday = new Date();
+
+            for(let d=1; d<=daysInMonth; d++) {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`, dayOfWeek = (emptyCells + d - 1) % 7;
+                let dayColor = ''; if (dayOfWeek === 5) dayColor = 'text-blue-500'; else if (dayOfWeek === 6) dayColor = 'text-rose-500'; 
+
+                const isTodayActive = (realToday.getMonth() === month && realToday.getDate() === d);
+                
+                let dayNumHtml = `<div class="h-5 md:h-6 mt-1 ml-1 md:ml-1.5 flex items-center">` +
+                    (isTodayActive 
+                    ? `<span class="bg-slate-900 text-white text-[9px] md:text-[11px] font-bold rounded-full w-4 h-4 md:w-5 md:h-5 flex items-center justify-center shadow-sm flex-shrink-0">${d}</span>`
+                    : `<span class="text-[9px] md:text-[11px] font-semibold text-slate-700 px-1 ${dayColor}">${d}</span>`) +
+                    `</div>`;
+
+                let cellZ = (eventsByDate[dateStr] && centerDates.has(dateStr)) ? 'z-20' : 'z-0';
+
+                let dayHtml = `<div class="bg-white min-h-[70px] md:min-h-[120px] pb-1 md:pb-2 flex flex-col relative group min-w-0 ${cellZ}">
+                    ${dayNumHtml}`;
+
+                if (eventsByDate[dateStr]) {
+                    const eventText = eventsByDate[dateStr], pD = new Date(year, month, d-1), nD = new Date(year, month, d+1);
+                    const prevStr = `${pD.getFullYear()}-${String(pD.getMonth()+1).padStart(2,'0')}-${String(pD.getDate()).padStart(2,'0')}`, nextStr = `${nD.getFullYear()}-${String(nD.getMonth()+1).padStart(2,'0')}-${String(nD.getDate()).padStart(2,'0')}`;
+                    const isFirstDayOfWeek = dayOfWeek === 0, isLastDayOfWeek = dayOfWeek === 6;
+                    const connLeft = eventsByDate[prevStr] === eventText && !isFirstDayOfWeek, connRight = eventsByDate[nextStr] === eventText && !isLastDayOfWeek; 
+                    
+                    let rbCls = `${eventColorMap[eventText]} py-0.5 md:py-1 z-10 border-y relative h-[16px] md:h-[22px] flex items-center justify-center `;
+                    if (connLeft && connRight) rbCls += "-ml-[1px] -mr-[1px] w-[calc(100%+2px)] border-x-0 rounded-none"; 
+                    else if (connLeft) rbCls += "-ml-[1px] mr-0.5 rounded-r rounded-l-none border-l-0 w-[calc(100%+1px)]";
+                    else if (connRight) rbCls += "ml-0.5 -mr-[1px] rounded-l rounded-r-none border-r-0 w-[calc(100%+1px)]";
+                    else rbCls += "mx-1 rounded border w-[calc(100%-8px)]";
+
+                    const displayTxt = centerDates.has(dateStr) ? `<span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-max px-1 text-[7.5px] md:text-[10px] tracking-tight font-bold whitespace-nowrap z-30 pointer-events-none text-slate-800 drop-shadow-sm">${eventText}</span>` : '';
+                    dayHtml += `<div class="w-full relative mt-1">${displayTxt}<div class="${rbCls}" title="${eventText}"></div></div>`;
+                } else {
+                    dayHtml += `<div class="h-[18px] md:h-[26px] mt-1"></div>`;
+                }
+
+                if (castSchedule[dateStr]) {
+                    let times = Object.keys(castSchedule[dateStr]).sort((a,b) => getTimeWeight(a) - getTimeWeight(b));
+                    dayHtml += `<div class="mt-0.5 md:mt-1 flex flex-col gap-0.5 md:gap-1 px-0.5 md:px-1 w-full box-border overflow-hidden">`;
+                    times.forEach(t => {
+                        const cast = castSchedule[dateStr][t];
+                        let isMatch = true;
+                        if (calFilterP && cast[0] !== calFilterP) isMatch = false;
+                        if (calFilterF && cast[1] !== calFilterF) isMatch = false;
+                        if (calFilterR && cast[2] !== calFilterR) isMatch = false;
+
+                        const isBooked = appData.records.some(r => r.date === dateStr && r.time === t);
+                        let btnClass = isBooked ? "bg-py-600 text-white font-bold shadow-md ring-1 ring-py-700 hover:bg-py-700" : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 font-medium";
+                        
+                        if (!isMatch) btnClass += " opacity-25 grayscale";
+
+                        let icon = (t.includes('낮') || getTimeWeight(t) < 1020) ? "🌞" : "🌙";
+                        
+                        dayHtml += `<button onclick="showScheduleDetail('${dateStr}', '${t}')" class="text-[8.5px] md:text-[10px] w-full px-0 py-1 rounded transition ${btnClass} flex flex-row items-center justify-center gap-[1.5px] leading-none whitespace-nowrap">
+                            <span class="flex-shrink-0">${icon}</span><span class="flex-shrink-0 mt-[1px] tracking-tighter">${t}</span>
+                        </button>`;
+                    });
+                    dayHtml += `</div>`;
+                }
+                dayHtml += `</div>`;
+                html += dayHtml;
+            }
+            
+            const totalCells = emptyCells + daysInMonth;
+            const remaining = 7 - (totalCells % 7);
+            if (remaining < 7) {
+                for(let i=0; i<remaining; i++) html += `<div class="bg-white min-h-[70px] md:min-h-[120px]"></div>`;
+            }
+            document.getElementById('calendarGrid').innerHTML = html;
+        }
+
+        function calculateStatsSheet() {
+            const totalP = {'손유동':0,'현석준':0,'백기범':0}, totalF = {'최수진':0,'허윤슬':0,'임예진':0}, totalR = {'박영수':0,'장민수':0,'임별':0}, totalPairs = {};
+            Object.values(castSchedule).forEach(day => Object.values(day).forEach(cast => {
+                const [p, f, r] = cast;
+                if (totalP[p]!==undefined) totalP[p]++; if (totalF[f]!==undefined) totalF[f]++; if (totalR[r]!==undefined) totalR[r]++;
+                totalPairs[`${p}, ${f}, ${r}`] = (totalPairs[`${p}, ${f}, ${r}`]||0)+1;
+            }));
+
+            const castP = {'손유동':0,'현석준':0,'백기범':0}, castF = {'최수진':0,'허윤슬':0,'임예진':0}, castR = {'박영수':0,'장민수':0,'임별':0}, pairs = {};
+            const unique = [], seen = new Set();
+            appData.records.forEach(r => { const gid = r.visitGroupId || r.id; if(!seen.has(gid)){ seen.add(gid); unique.push(r); }});
+            unique.forEach(r => {
+                if(castP[r.parkyeol]!==undefined) castP[r.parkyeol]++; if(castF[r.fumiko]!==undefined) castF[r.fumiko]++; if(castR[r.ryuji]!==undefined) castR[r.ryuji]++;
+                pairs[`${r.parkyeol}, ${r.fumiko}, ${r.ryuji}`] = (pairs[`${r.parkyeol}, ${r.fumiko}, ${r.ryuji}`]||0)+1;
+            });
+
+            globalStats = { totalP, castP, totalF, castF, totalR, castR, totalPairs, pairs, totalVisits: unique.length };
+
+            const drawList = (tId, attD, totD) => {
+                const dom = document.getElementById(tId); dom.innerHTML = '';
+                const totC = Object.values(totD).reduce((a,b)=>a+b,0), attS = Object.values(attD).reduce((a,b)=>a+b,0), dispT = totC>0?totC:attS;
+                if(document.getElementById(tId.replace('report','total')+'Count')) document.getElementById(tId.replace('report','total')+'Count').innerText = `총 ${dispT}회`;
+                Object.keys(attD).forEach(name => {
+                    const att = attD[name]||0, tot = totD[name]||0, dTot = tot>0?tot:att;
+                    dom.innerHTML += `<div class="flex justify-between items-center bg-white border border-slate-200/80 p-1.5 rounded-lg text-xs"><span class="font-medium text-slate-700">${name}</span><span class="bg-py-50 text-py-700 px-1.5 py-0.5 rounded font-bold">${att}회 / ${dTot}회</span></div>`;
+                });
+            };
+            drawList('reportParkyeol', castP, totalP); drawList('reportFumiko', castF, totalF); drawList('reportRyuji', castR, totalR);
+
+            const rPair = document.getElementById('reportPair'); rPair.innerHTML = '';
+            const allPKeys = new Set([...Object.keys(totalPairs), ...Object.keys(pairs)]);
+            let tPSum = Object.values(totalPairs).reduce((a,b)=>a+b,0), aPSum = Object.values(pairs).reduce((a,b)=>a+b,0);
+            document.getElementById('totalPairCount').innerText = `총 ${tPSum>0?tPSum:aPSum}회`;
+
+            const pList = Array.from(allPKeys).map(k => ({ name: k, att: pairs[k]||0, tot: totalPairs[k]||pairs[k]||0 })).sort((a,b) => b.att-a.att || b.tot-a.tot);
+            if(pList.length === 0) rPair.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">데이터 없음</p>';
+            else pList.forEach(p => rPair.innerHTML += `<div class="flex justify-between items-center bg-white border border-slate-200/80 p-1.5 rounded-lg text-[10px]"><span class="font-medium text-slate-700 whitespace-normal leading-snug break-keep">${p.name}</span><span class="bg-py-50 text-py-700 px-1.5 py-0.5 rounded font-bold ml-1 flex-shrink-0">${p.att}회 / ${p.tot}회</span></div>`);
+        }
+
+        async function openPreviewModal() {
+            const modal = document.getElementById('imagePreviewModal');
+            const previewImg = document.getElementById('previewImage');
+            const loadingUI = document.getElementById('previewLoading');
+            const downloadBtn = document.getElementById('finalDownloadBtn');
+            
+            modal.classList.add('active');
+            previewImg.classList.add('hidden');
+            loadingUI.classList.remove('hidden');
+            downloadBtn.disabled = true;
+
+            await renderCanvasForPreview();
+        }
+
+        function closePreviewModal() { document.getElementById('imagePreviewModal').classList.remove('active'); }
+
+        function downloadRenderedImage() {
+            if (!generatedImageUrl) return;
+            const link = document.createElement('a');
+            link.download = `박열_정산_${new Date().toISOString().slice(0,10)}.png`;
+            link.href = generatedImageUrl;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            closePreviewModal();
+        }
+
+        async function renderCanvasForPreview() {
+            const container = document.getElementById('export-container');
+            container.style.height = 'auto';
+            
+            const buildActorCard = (role, name) => {
+                const imgPath = imagePaths.actors[name];
+                const safeImgPath = encodeURI(imgPath);
+
+                let att = 0, tot = 0;
+                if(role === 'parkyeol') { att = globalStats.castP[name]||0; tot = globalStats.totalP[name]||0; }
+                if(role === 'fumiko') { att = globalStats.castF[name]||0; tot = globalStats.totalF[name]||0; }
+                if(role === 'ryuji') { att = globalStats.castR[name]||0; tot = globalStats.totalR[name]||0; }
+                const dTot = tot > 0 ? tot : att; 
+
+                return `
+                    <div style="display:flex; flex-direction:column; align-items:center; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 12px; border: 1px solid rgba(214, 200, 191, 0.15);">
+                        <img src="${safeImgPath}" style="width: 80px; height: 110px; object-fit: cover; border-radius: 8px; border: 2px solid #A67F68; box-shadow: 0 4px 6px rgba(0,0,0,0.5);" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTQwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNDAzQjM4Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiNENkM4QkYiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='">
+                        <span style="color: #F7F5F3; font-weight: bold; font-size: 15px; margin-top: 8px; letter-spacing: 1px;">${name}</span>
+                        <div style="color: #D6C8BF; margin-top: 2px; font-weight: 500;">
+                            <span style="color: #A67F68; font-size: 16px; font-weight: bold;">${att}</span><span style="font-size: 12px;">회</span> 
+                            <span style="opacity: 0.6; font-size: 12px;">/ ${dTot}회</span>
+                        </div>
+                    </div>
+                `;
+            };
+
+            const safePosterPath = encodeURI(imagePaths.poster);
+
+            container.innerHTML = `
+                <div style="position: absolute; inset: 0; background-image: url('${safePosterPath}'); background-size: cover; background-position: center; z-index: 1;"></div>
+                <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(20, 15, 12, 0.85) 0%, rgba(40, 35, 33, 0.75) 100%); backdrop-filter: blur(10px); z-index: 2;"></div>
+                
+                <div style="position: relative; z-index: 10; display: flex; align-items: stretch; padding: 40px 50px; gap: 40px; color: #F7F5F3; box-sizing: border-box;">
+                    
+                    <div style="flex: 1.1; display: flex; flex-direction: column; gap: 18px;">
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <h2 style="font-size: 16px; color: #C2AA9D; margin: 0; font-weight: bold; letter-spacing: 2px; text-align: center;">박열</h2>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                ${buildActorCard('parkyeol', '손유동')} ${buildActorCard('parkyeol', '현석준')} ${buildActorCard('parkyeol', '백기범')}
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <h2 style="font-size: 16px; color: #C2AA9D; margin: 0; font-weight: bold; letter-spacing: 2px; text-align: center;">가네코 후미코</h2>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                ${buildActorCard('fumiko', '최수진')} ${buildActorCard('fumiko', '허윤슬')} ${buildActorCard('fumiko', '임예진')}
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <h2 style="font-size: 16px; color: #C2AA9D; margin: 0; font-weight: bold; letter-spacing: 2px; text-align: center;">류지</h2>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                ${buildActorCard('ryuji', '박영수')} ${buildActorCard('ryuji', '장민수')} ${buildActorCard('ryuji', '임별')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0.9; display: flex; flex-direction: column;">
+                        
+                        <div style="text-align: center; font-size: 33px; color: #D6C8BF; margin-bottom: 25px; margin-top: -5px;">
+                            총 <span style="color: #A67F68; font-weight: bold; font-size: 48px; margin: 0 8px;">${globalStats.totalVisits}</span>회
+                        </div>
+
+                        <div style="flex-grow: 1; background: rgba(0, 0, 0, 0.25); border-radius: 20px; padding: 30px; border: 1px solid rgba(166, 127, 104, 0.3); display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                            
+                            <div style="width: 320px; background: #222; color: #fff; text-align: center; padding: 8px 0; font-size: 16px; font-weight: bold; letter-spacing: 4px; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.5);">STAGE</div>
+                            
+                            <div id="exportSeatingGrid" style="display:flex; flex-direction:column; gap: 4px; transform: scale(1.1); transform-origin: center top; width: max-content; margin: 0 auto;"></div>
+
+                            <div style="text-align: center; margin-top: 35px; font-size: 14px; color: #C2AA9D; line-height: 1;">
+                                <span style="display: inline-block; margin: 0 8px;"><span style="display: inline-block; width:12px; height:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.2); border-radius:3px; vertical-align: -1px; margin-right: 4px;"></span>0회</span>
+                                <span style="display: inline-block; margin: 0 8px;"><span style="display: inline-block; width:12px; height:12px; background:#fecaca; border:1px solid #f87171; border-radius:3px; vertical-align: -1px; margin-right: 4px;"></span>1회</span>
+                                <span style="display: inline-block; margin: 0 8px;"><span style="display: inline-block; width:12px; height:12px; background:#fef08a; border:1px solid #facc15; border-radius:3px; vertical-align: -1px; margin-right: 4px;"></span>2회</span>
+                                <span style="display: inline-block; margin: 0 8px;"><span style="display: inline-block; width:12px; height:12px; background:#bbf7d0; border:1px solid #4ade80; border-radius:3px; vertical-align: -1px; margin-right: 4px;"></span>3회</span>
+                                <span style="display: inline-block; margin: 0 8px;"><span style="display: inline-block; width:12px; height:12px; background:#bfdbfe; border:1px solid #60a5fa; border-radius:3px; vertical-align: -1px; margin-right: 4px;"></span>4회</span>
+                                <span style="display: inline-block; margin: 0 8px;"><span style="display: inline-block; width:12px; height:12px; background:#A67F68; border:1px solid #8A6854; border-radius:3px; vertical-align: -1px; margin-right: 4px;"></span>5회+</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('exportSeatingGrid').innerHTML = getInlineStyleHeatmapHTML();
+
+            await new Promise(r => setTimeout(r, 800));
+
+            try {
+                const canvas = await html2canvas(container, {
+                    scale: 2, 
+                    useCORS: true, 
+                    backgroundColor: '#1a1a1a',
+                    logging: false
+                });
+                
+                generatedImageUrl = canvas.toDataURL('image/png');
+                
+                document.getElementById('previewLoading').classList.add('hidden');
+                document.getElementById('previewImage').src = generatedImageUrl;
+                document.getElementById('previewImage').classList.remove('hidden');
+                document.getElementById('finalDownloadBtn').disabled = false;
+
+            } catch (error) {
+                console.error(error);
+                closePreviewModal();
+                alert('이미지 생성 중 오류가 발생했습니다.');
+            }
+        }
+
+        function getInlineStyleHeatmapHTML() {
+            const seatCounts = {}, uniqueVisits = [], seenGroups = new Set();
+            appData.records.forEach(r => { const gid = r.visitGroupId || r.id; if(!seenGroups.has(gid)) { seenGroups.add(gid); uniqueVisits.push(r); } });
+            uniqueVisits.forEach(r => seatCounts[r.seat] = (seatCounts[r.seat] || 0) + 1);
+
+            const getStyle = (c) => {
+                if (c === 0) return 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.2);';
+                if (c === 1) return 'background: #fecaca; border: 1px solid #f87171; color: #7f1d1d;';
+                if (c === 2) return 'background: #fef08a; border: 1px solid #facc15; color: #713f12;';
+                if (c === 3) return 'background: #bbf7d0; border: 1px solid #4ade80; color: #14532d;';
+                if (c === 4) return 'background: #bfdbfe; border: 1px solid #60a5fa; color: #1e3a8a;';
+                return 'background: #A67F68; border: 1px solid #8A6854; color: #ffffff; box-shadow: 0 0 5px rgba(166,127,104,0.5);';
+            };
+
+            const b = (id, l) => `<div style="width: 22px; height: 22px; border-radius: 4px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 10px; font-family: 'Baekbeom', sans-serif; flex-shrink: 0; ${getStyle(seatCounts[id]||0)}"></div>`;
+            const eb = (n) => Array(n).fill(`<div style="width: 22px; height: 22px; background: transparent; flex-shrink: 0;"></div>`).join('');
+            
+            const wrap = (name, inn) => `<div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                <span style="font-size: 11px; color: rgba(255,255,255,0.4); width: 16px; font-weight: bold; text-align: right; margin-right: 8px;">${name}</span>
+                <div style="display: flex; gap: 4px; align-items: center; justify-content: center; width: 542px;">${inn}</div>
+                <span style="font-size: 11px; color: rgba(255,255,255,0.4); width: 16px; font-weight: bold; text-align: left; margin-left: 8px;">${name}</span>
+            </div>`;
+
+            let h = '';
+            const rng = (r, m) => { let ht=''; for(let s=1;s<=m;s++) ht+=b(`${r}${s}`,s); return ht; };
+            h += wrap('A', rng('A',19)) + wrap('B', rng('B',19)) + wrap('C', rng('C',18)) + wrap('D', rng('D',19)) + `<div class="w-full h-3 md:h-6"></div>`;
+            h += wrap('E', eb(2)+rng('E',7).replace(/E/g,'E')+eb(1)+rng('E',17).substring(rng('E',7).length)); 
+            h += wrap('F', eb(2)+rng('F',7).replace(/F/g,'F')+eb(1)+rng('F',17).substring(rng('F',7).length)); 
+            h += wrap('G', eb(2)+rng('G',7).replace(/G/g,'G')+eb(1)+rng('G',17).substring(rng('G',7).length));
+
+            const rhij = (r) => { let ht=''; for(let s=1;s<=9;s++) ht+=b(`${r}${s}`,s); ht+=eb(1); for(let s=10;s<=19;s++) ht+=b(`${r}${s}`,s); return ht; };
+            h += wrap('H', rhij('H')) + wrap('I', rhij('I')) + wrap('J', rhij('J'));
+
+            let hk=''; for(let s=1;s<=9;s++) hk+=b(`K${s}`,s); hk+=eb(1); for(let s=10;s<=18;s++) hk+=b(`K${s}`,s); hk+=eb(1); h += wrap('K', hk);
+            let hl=eb(2); for(let s=1;s<=7;s++) hl+=b(`L${s}`,s); hl+=eb(12); h += wrap('L', hl);
+
+            return h;
+        }
+
+        function renderAll() {
+            document.getElementById('globalCouponCount').innerText = `${appData.coupons}장`;
+            document.getElementById('globalOstCount').innerText = `${appData.ostTickets}장`;
+
+            const cb = document.getElementById('cardContainer'); cb.innerHTML = '';
+            appData.cards.forEach((c, i) => {
+                let dots = '';
+                for(let d=1; d<=7; d++) {
+                    if (d <= c.stamps) {
+                        let inn = '🧨', cls = 'bg-py-300 text-py-900 border border-py-400 text-[9px]'; 
+                        if (d===3) { inn = '🎟️'; cls = 'bg-py-700 text-white shadow-sm'; }
+                        if (d===7) { inn = '💿'; cls = 'bg-py-700 text-white shadow-sm'; }
+                        dots += `<div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] ${cls} font-bold">${inn}</div>`;
+                    } else dots += `<div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] bg-white border text-slate-300">${d}</div>`;
+                }
+                cb.innerHTML += `<div class="p-3 rounded-xl border cursor-pointer transition-all ${c.isActive ? 'bg-py-50/80 border-py-500 shadow-sm' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}" onclick="switchCard(${c.id})"><div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-slate-800">${c.isActive ? '🔥 [사용중] ' : '📁 '} 도장판 #${i+1}</span><button onclick="deleteCard(${c.id}, event)" class="text-[10px] text-rose-500 hover:underline">삭제</button></div><div class="flex gap-1">${dots}</div></div>`;
+            });
+            
+            let vC = 0, currGrp = null; const sMap = {};
+            appData.records.forEach(r => { const id = r.visitGroupId || r.id; if (currGrp !== id) { vC++; currGrp = id; } sMap[id] = vC; });
+            const ordGrps = [], seen = new Set();
+            appData.records.forEach(r => { const gid = r.visitGroupId || r.id; if (!seen.has(gid)) { seen.add(gid); ordGrps.push({ gid, records: [] }); } ordGrps.find(g => g.gid === gid).records.push(r); });
+
+            const tbody = document.getElementById('recordTableBody'); tbody.innerHTML = '';
+            if(ordGrps.length === 0) tbody.innerHTML = `<tr><td class="p-8 text-center text-slate-400">등록된 일지가 없습니다.</td></tr>`;
+            else ordGrps.slice().reverse().forEach(g => {
+                const main = g.records[0], cStr = g.records.map(r => { const cIdx = appData.cards.findIndex(c => c.id === r.cardId); return cIdx > -1 ? `판 #${cIdx + 1}` : '삭제됨'; }).map(n => `<span class="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[9px] mr-1">[${n}]</span>`).join('');
+                const qStr = g.records.map(r => `+${r.qty}`).join(', '), usedCp = g.records.some(r => r.useCoupon);
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 transition"><td class="py-3 px-1"><div class="flex justify-between items-start mb-1"><div class="font-bold text-slate-800 flex items-center flex-wrap gap-y-1"><span class="bg-stone-200 text-stone-700 px-1.5 py-0.5 rounded text-[9px] mr-1 font-bold">[자${sMap[g.gid]}]</span>${cStr}<span class="ml-0.5">${main.date} <span class="text-py-500 text-[10px] font-bold">${main.time}</span></span></div><div class="flex gap-1.5 items-center pl-2">${usedCp ? '<span class="bg-amber-100 text-amber-800 text-[9px] font-bold px-1 rounded flex-shrink-0">할인</span>' : ''}<span class="text-py-500 font-bold whitespace-nowrap">${qStr}</span></div></div><div class="flex justify-between items-center text-slate-600 mt-1"><span>${main.parkyeol}, ${main.fumiko}, ${main.ryuji}</span><div class="flex gap-3 items-center"><span class="font-bold text-py-900">${main.seat}</span><div class="flex gap-1.5"><button onclick="editRecord(${main.id})" class="text-[10px] bg-slate-100 text-slate-500 hover:bg-amber-100 hover:text-amber-600 px-1.5 py-0.5 rounded transition">수정</button><button onclick="deleteRecord(${main.id})" class="text-[10px] bg-slate-100 text-slate-500 hover:bg-rose-100 hover:text-rose-600 px-1.5 py-0.5 rounded transition">삭제</button></div></div></div></td></tr>`;            });
+            
+            generateHeatmap(); 
+            calculateStatsSheet();
+            renderCalendar();
+        }
+
+        window.onload = async function() { 
+            const today = new Date();
+            let yyyy = today.getFullYear();
+            let mm = String(today.getMonth() + 1).padStart(2, '0');
+            let dd = String(today.getDate()).padStart(2, '0');
+            let defaultDate = `${yyyy}-${mm}-${dd}`;
+            
+            if (defaultDate < '2026-06-10') defaultDate = '2026-06-10';
+            if (defaultDate > '2026-09-06') defaultDate = '2026-09-06';
+            
+            document.getElementById('perfDate').value = defaultDate;
+            await loadScheduleFromGoogleSheet();
+            handleDateChange();
+            renderAll(); 
+        };
+    </script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
+</body>
+</html>
