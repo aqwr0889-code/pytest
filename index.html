@@ -1202,9 +1202,9 @@
                         <div style="width: 145px; height: 200px; overflow: hidden; position: relative; border: 1px solid #9c9489;">
                             <img src="${safeImgPath}" style="width: 100%; height: 100%; object-fit: cover; filter: sepia(40%) grayscale(60%) contrast(110%) brightness(0.9);" onerror="this.style.display='none'">
                             
-                            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: #2c2825; padding: 12px 5px; display: flex; flex-direction: column; align-items: center; line-height: 1.2;">
-                                <span style="font-family: 'Baekbeom', sans-serif; font-size: 15px; font-weight: bold; color: #ffffff; letter-spacing: 1px;">${name}</span>
-                                <span style="font-family: 'Baekbeom', sans-serif; font-size: 11px; font-weight: bold; color: #e5a8a8; margin-top: 2px;">${att} / ${dTot}</span>
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 35%, rgba(0,0,0,0) 75%); padding: 50px 5px 8px 5px; display: flex; flex-direction: column; align-items: center; line-height: 1.2;">
+                                <span style="font-family: 'Baekbeom', sans-serif; font-size: 16px; font-weight: bold; color: #ffffff; letter-spacing: 1.5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${name}</span>
+                                <span style="font-family: 'Baekbeom', sans-serif; font-size: 12px; font-weight: bold; color: #ffcaca; margin-top: 3px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${att} / ${dTot}</span>
                             </div>
                         </div>
                     </div>
@@ -1252,8 +1252,8 @@
                             
                             <div style="position: absolute; inset: 0; background-image: url('${safeTex2}'); background-size: cover; opacity: 0.15; pointer-events: none; z-index: 0;"></div>
 
-                            <div style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 2px solid #5a4b40; padding-bottom: 12px; margin-bottom: 25px;">
-                                <img src="${safePyLogo}" style="height: 55px; object-fit: contain; filter: grayscale(100%) contrast(200%) brightness(0.2); opacity: 0.85;" alt="박열">
+                            <div style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 2px solid #5a4b40; padding-bottom: 15px; margin-bottom: 25px;">
+                                <img src="${safePyLogo}" style="height: 60px; object-fit: contain; filter: grayscale(100%) contrast(200%) brightness(0.2); opacity: 0.85;" alt="박열">
                             </div>
 
                             <div style="position: relative; z-index: 1; text-align: center; font-size: 22px; color: #2c2825; margin-bottom: 25px;">
@@ -1307,9 +1307,7 @@
                 return 'background: rgba(122,40,40,0.95); border: 1px solid #5a1919; color: #ffffff; box-shadow: 0 0 3px rgba(122,40,40,0.5);';
             };
 
-            const b = (id, l) => `<div style="width: 23px; height: 23px; border-radius: 1px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 10.5px; font-family: 'Baekbeom', sans-serif; flex-shrink: 0; ${getStyle(seatCounts[id]||0)}">
-                <span style="display: flex; align-items: center; justify-content: center; height: 100%; margin-top: 1px;">${l}</span>
-            </div>`;
+            const b = (id, l) => `<div style="width: 23px; height: 23px; border-radius: 1px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 10.5px; font-family: 'Baekbeom', sans-serif; flex-shrink: 0; padding-bottom: 2px; ${getStyle(seatCounts[id]||0)}">${l}</div>`;
             const eb = (n) => Array(n).fill(`<div style="width: 23px; height: 23px; background: transparent; flex-shrink: 0;"></div>`).join('');
             
             const wrap = (name, inn) => `<div style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 2.5px 0;">
@@ -1318,21 +1316,33 @@
                 <span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: left; margin-left: 10px; flex-shrink: 0;">${name}</span>
             </div>`;
 
+            const r = (row, start, end) => {
+                let html = '';
+                for (let i = start; i <= end; i++) html += b(`${row}${i}`, i);
+                return html;
+            };
+
             let h = '';
             
             h += `<div style="width: 320px; background: #3d3530; color: #fff; text-align: center; padding: 6px 0; font-size: 14px; font-weight: bold; letter-spacing: 5px; border-radius: 4px; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.4);">S T A G E</div>`;
 
-            const rng = (r, m) => { let ht=''; for(let s=1;s<=m;s++) ht+=b(`${r}${s}`,s); return ht; };
-            h += wrap('A', rng('A',19)) + wrap('B', rng('B',19)) + wrap('C', eb(0.5) + rng('C',18) + eb(0.5)) + wrap('D', rng('D',19));
-            h += wrap('E', eb(2)+rng('E',7).replace(/E/g,'E')+eb(1)+rng('E',17).substring(rng('E',7).length)); 
-            h += wrap('F', eb(2)+rng('F',7).replace(/F/g,'F')+eb(1)+rng('F',17).substring(rng('F',7).length)); 
-            h += wrap('G', eb(2)+rng('G',7).replace(/G/g,'G')+eb(1)+rng('G',17).substring(rng('G',7).length));
-
-            const rhij = (r) => { let ht=''; for(let s=1;s<=9;s++) ht+=b(`${r}${s}`,s); ht+=eb(1); for(let s=10;s<=19;s++) ht+=b(`${r}${s}`,s); return ht; };
-            h += wrap('H', rhij('H')) + wrap('I', rhij('I')) + wrap('J', rhij('J'));
-
-            let hk=''; for(let s=1;s<=9;s++) hk+=b(`K${s}`,s); hk+=eb(1); for(let s=10;s<=18;s++) hk+=b(`K${s}`,s); hk+=eb(1); h += wrap('K', hk);
-            let hl=eb(6); for(let s=1;s<=7;s++) hl+=b(`L${s}`,s); hl+=eb(6); h += wrap('L', hl);
+            h += wrap('A', r('A',1,19) + eb(1));
+            h += wrap('B', r('B',1,19) + eb(1));
+            h += wrap('C', r('C',1,18) + eb(2));
+            h += wrap('D', r('D',1,19) + eb(1));
+            
+            h += `<div style="width: 100%; height: 12px;"></div>`;
+            
+            h += wrap('E', eb(2) + r('E',1,7) + eb(1) + r('E',8,17));
+            h += wrap('F', eb(2) + r('F',1,7) + eb(1) + r('F',8,17));
+            h += wrap('G', eb(2) + r('G',1,7) + eb(1) + r('G',8,17));
+            
+            h += wrap('H', r('H',1,9) + eb(1) + r('H',10,19));
+            h += wrap('I', r('I',1,9) + eb(1) + r('I',10,19));
+            h += wrap('J', r('J',1,9) + eb(1) + r('J',10,19));
+            
+            h += wrap('K', r('K',1,9) + eb(1) + r('K',10,18) + eb(1));
+            h += wrap('L', eb(2) + r('L',1,7) + eb(11));
 
             return h;
         }
