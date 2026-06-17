@@ -500,10 +500,6 @@
 
         const imagePaths = {
             poster: './메인 포스터.jpg',
-            tex2: './질감2.jpg',
-            tex3: './질감3.jpg',
-            tex4: './질감4.jpg',
-            cuffs: './수갑.jpg',
             pyLogo: './py.webp',
             actors: {
                 '손유동': './박열_손유동.jpg', '현석준': './박열_현석준.jpg', '백기범': './박열_백기범.jpg',
@@ -1187,7 +1183,7 @@
             const container = document.getElementById('export-container');
             container.style.height = 'auto';
             
-            const buildActorCard = (role, name, rot, zIndex) => {
+            const buildActorCard = (role, name) => {
                 const imgPath = imagePaths.actors[name];
                 const safeImgPath = encodeURI(imgPath);
 
@@ -1198,80 +1194,67 @@
                 const dTot = tot > 0 ? tot : att; 
 
                 return `
-                    <div style="position: relative; z-index: ${zIndex}; transform: rotate(${rot}deg); background: #f0ebe1; padding: 8px 8px 24px 8px; border-radius: 2px; box-shadow: 2px 4px 12px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; border: 1px solid #dcd3c6;">
-                        <div style="width: 75px; height: 105px; overflow: hidden; border: 1px solid #a39b8d;">
-                            <img src="${safeImgPath}" style="width: 100%; height: 100%; object-fit: cover; filter: sepia(50%) grayscale(70%) contrast(110%) brightness(0.9);" onerror="this.style.display='none'">
-                        </div>
-                        <div style="margin-top: 8px; font-family: 'Baekbeom', sans-serif; color: #2c2825; display: flex; flex-direction: column; align-items: center; line-height: 1.1;">
-                            <span style="font-size: 13px; font-weight: bold; letter-spacing: 1px;">${name}</span>
-                            <span style="font-size: 11px; font-weight: bold; color: #7a2828; margin-top: 3px;">${att} / ${dTot}</span>
+                    <div style="display:flex; flex-direction:column; align-items:center; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 12px; border: 1px solid rgba(214, 200, 191, 0.15);">
+                        <img src="${safeImgPath}" style="width: 80px; height: 110px; object-fit: cover; border-radius: 8px; border: 2px solid #A67F68; box-shadow: 0 4px 6px rgba(0,0,0,0.5);" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTQwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNDAzQjM4Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiNENkM4QkYiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='">
+                        <span style="color: #F7F5F3; font-weight: bold; font-size: 15px; margin-top: 8px; letter-spacing: 1px;">${name}</span>
+                        <div style="color: #D6C8BF; margin-top: 2px; font-weight: 500;">
+                            <span style="color: #A67F68; font-size: 16px; font-weight: bold;">${att}</span><span style="font-size: 12px;">회</span> 
+                            <span style="opacity: 0.6; font-size: 12px;">/ ${dTot}회</span>
                         </div>
                     </div>
                 `;
             };
 
-            const safePoster = encodeURI(imagePaths.poster);
-            const safeTex2 = encodeURI(imagePaths.tex2);
-            const safeTex3 = encodeURI(imagePaths.tex3);
-            const safeTex4 = encodeURI(imagePaths.tex4);
-            const safeCuffs = encodeURI(imagePaths.cuffs);
+            const safePosterPath = encodeURI(imagePaths.poster);
 
             container.innerHTML = `
-                <div style="position: absolute; inset: 0; background-color: #1a1716;"></div>
-                <div style="position: absolute; inset: 0; background-image: url('${safePoster}'); background-size: cover; background-position: center; opacity: 0.3; filter: grayscale(50%); z-index: 1;"></div>
-                <div style="position: absolute; inset: 0; background-image: url('${safeTex4}'); background-size: cover; background-position: center; opacity: 0.2; z-index: 2;"></div>
+                <div style="position: absolute; inset: 0; background-image: url('${safePosterPath}'); background-size: cover; background-position: center; z-index: 1;"></div>
+                <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(20, 15, 12, 0.85) 0%, rgba(40, 35, 33, 0.75) 100%); backdrop-filter: blur(10px); z-index: 2;"></div>
                 
-                <div style="position: relative; z-index: 10; display: flex; align-items: stretch; padding: 40px 50px; gap: 30px; box-sizing: border-box; width: 100%;">
+                <div style="position: relative; z-index: 10; display: flex; align-items: stretch; padding: 40px 50px; gap: 40px; color: #F7F5F3; box-sizing: border-box;">
                     
-                    <div style="flex: 1.1; position: relative;">
-                        <div style="position: absolute; top: 10px; left: -10px; width: 95%; height: 95%; background-image: url('${safeTex3}'); background-size: cover; opacity: 0.5; transform: rotate(-2deg); box-shadow: 2px 4px 15px rgba(0,0,0,0.6); filter: sepia(40%) grayscale(60%); z-index: 1;"></div>
-
-                        <div style="position: relative; z-index: 10; display: flex; flex-direction: column; gap: 15px; padding: 20px;">
-                            <div style="display: flex; gap: 10px; justify-content: center;">
-                                ${buildActorCard('parkyeol', '손유동', -3, 12)}
-                                ${buildActorCard('parkyeol', '현석준', 2, 11)}
-                                ${buildActorCard('parkyeol', '백기범', -2, 13)}
+                    <div style="flex: 1.1; display: flex; flex-direction: column; gap: 18px;">
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <h2 style="font-size: 16px; color: #C2AA9D; margin: 0; font-weight: bold; letter-spacing: 2px; text-align: center;">박열</h2>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                ${buildActorCard('parkyeol', '손유동')} ${buildActorCard('parkyeol', '현석준')} ${buildActorCard('parkyeol', '백기범')}
                             </div>
-                            <div style="display: flex; gap: 10px; justify-content: center; margin-left: -20px;">
-                                ${buildActorCard('fumiko', '최수진', 4, 15)}
-                                ${buildActorCard('fumiko', '허윤슬', -4, 14)}
-                                ${buildActorCard('fumiko', '임예진', 1, 16)}
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <h2 style="font-size: 16px; color: #C2AA9D; margin: 0; font-weight: bold; letter-spacing: 2px; text-align: center;">가네코 후미코</h2>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                ${buildActorCard('fumiko', '최수진')} ${buildActorCard('fumiko', '허윤슬')} ${buildActorCard('fumiko', '임예진')}
                             </div>
-                            <div style="display: flex; gap: 10px; justify-content: center; margin-left: 20px;">
-                                ${buildActorCard('ryuji', '박영수', -1, 11)}
-                                ${buildActorCard('ryuji', '장민수', 3, 12)}
-                                ${buildActorCard('ryuji', '임별', -3, 10)}
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <h2 style="font-size: 16px; color: #C2AA9D; margin: 0; font-weight: bold; letter-spacing: 2px; text-align: center;">류지</h2>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                ${buildActorCard('ryuji', '박영수')} ${buildActorCard('ryuji', '장민수')} ${buildActorCard('ryuji', '임별')}
                             </div>
                         </div>
                     </div>
 
-                    <div style="flex: 0.9; display: flex; flex-direction: column; position: relative; z-index: 20;">
-                        <div style="background-color: #eee9e0; border-radius: 2px; padding: 30px 20px; box-shadow: inset 0 0 50px rgba(139, 115, 85, 0.3), 5px 8px 25px rgba(0,0,0,0.7); position: relative; overflow: hidden; flex-grow: 1; display: flex; flex-direction: column; border: 1px solid #c2b5a3; transform: rotate(1.5deg);">
-                            
-                            <div style="position: absolute; inset: 0; background-image: url('${safeTex2}'); background-size: cover; opacity: 0.2; pointer-events: none; z-index: 0;"></div>
-
-                            <div style="position: relative; z-index: 1; text-align: center; border-bottom: 2px solid #5a4b40; padding-bottom: 10px; margin-bottom: 20px;">
-                                <h2 style="margin: 0; font-size: 26px; color: #2c2825; letter-spacing: 6px; font-weight: bold;">公判 記錄</h2>
-                                <p style="margin: 5px 0 0 0; font-size: 11px; color: #5a4b40; letter-spacing: 2px;">(관극 정산 기록부)</p>
-                            </div>
-
-                            <div style="position: relative; z-index: 1; text-align: center; font-size: 20px; color: #2c2825; margin-bottom: 20px;">
-                                총 <span style="color: #7a2828; font-weight: bold; font-size: 36px; margin: 0 5px; border-bottom: 1.5px solid #7a2828;">${globalStats.totalVisits}</span> 회
-                            </div>
-
-                            <div id="exportSeatingGrid" style="display:flex; flex-direction:column; gap: 4px; width: 100%; align-items: center; justify-content: center; position: relative; z-index: 1;"></div>
-                            
-                            <div style="position: relative; z-index: 1; text-align: center; margin-top: 30px; font-size: 13px; color: #5a4b40; line-height: 1; font-weight: bold;">
-                                <span style="display: inline-block; margin: 0 5px;"><span style="display: inline-block; width:11px; height:11px; border:1px solid #a39b8d; vertical-align: -1px; margin-right: 4px;"></span>0</span>
-                                <span style="display: inline-block; margin: 0 5px;"><span style="display: inline-block; width:11px; height:11px; background:#fecaca; border:1px solid #f87171; vertical-align: -1px; margin-right: 4px;"></span>1</span>
-                                <span style="display: inline-block; margin: 0 5px;"><span style="display: inline-block; width:11px; height:11px; background:#fef08a; border:1px solid #facc15; vertical-align: -1px; margin-right: 4px;"></span>2</span>
-                                <span style="display: inline-block; margin: 0 5px;"><span style="display: inline-block; width:11px; height:11px; background:#bbf7d0; border:1px solid #4ade80; vertical-align: -1px; margin-right: 4px;"></span>3</span>
-                                <span style="display: inline-block; margin: 0 5px;"><span style="display: inline-block; width:11px; height:11px; background:#bfdbfe; border:1px solid #60a5fa; vertical-align: -1px; margin-right: 4px;"></span>4</span>
-                                <span style="display: inline-block; margin: 0 5px;"><span style="display: inline-block; width:11px; height:11px; background:#7a2828; border:1px solid #5a1919; vertical-align: -1px; margin-right: 4px;"></span>5+</span>
-                            </div>
+                    <div style="flex: 0.9; display: flex; flex-direction: column;">
+                        
+                        <div style="text-align: center; font-size: 33px; color: #D6C8BF; margin-bottom: 25px; margin-top: -5px;">
+                            총 <span style="color: #A67F68; font-weight: bold; font-size: 48px; margin: 0 8px;">${globalStats.totalVisits}</span>회
                         </div>
 
-                        <img src="${safeCuffs}" style="position: absolute; bottom: -50px; right: -50px; width: 320px; mix-blend-mode: screen; opacity: 0.85; transform: rotate(-25deg); z-index: 30;" alt="수갑">
+                        <div style="flex-grow: 1; background: rgba(0, 0, 0, 0.25); border-radius: 20px; padding: 30px; border: 1px solid rgba(166, 127, 104, 0.3); display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                            
+                            <div style="width: 320px; background: #222; color: #fff; text-align: center; padding: 8px 0; font-size: 16px; font-weight: bold; letter-spacing: 4px; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.5);">STAGE</div>
+                            
+                            <div id="exportSeatingGrid" style="display:flex; flex-direction:column; gap: 4px; transform: scale(1.1); transform-origin: center top; width: max-content; margin: 0 auto;"></div>
+
+                            <div style="text-align: center; margin-top: 35px; font-size: 14px; color: #C2AA9D; line-height: 1;">
+                                <span style="display: inline-block; margin: 0 8px;"><span style="display: inline-block; width:12px; height:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.2); border-radius:3px; vertical-align: -1px; margin-right: 4px;"></span>0회</span>
+                                <span style="display: inline-block; margin: 0 8px;"><span style="display: inline-block; width:12px; height:12px; background:#fecaca; border:1px solid #f87171; border-radius:3px; vertical-align: -1px; margin-right: 4px;"></span>1회</span>
+                                <span style="display: inline-block; margin: 0 8px;"><span style="display: inline-block; width:12px; height:12px; background:#fef08a; border:1px solid #facc15; border-radius:3px; vertical-align: -1px; margin-right: 4px;"></span>2회</span>
+                                <span style="display: inline-block; margin: 0 8px;"><span style="display: inline-block; width:12px; height:12px; background:#bbf7d0; border:1px solid #4ade80; border-radius:3px; vertical-align: -1px; margin-right: 4px;"></span>3회</span>
+                                <span style="display: inline-block; margin: 0 8px;"><span style="display: inline-block; width:12px; height:12px; background:#bfdbfe; border:1px solid #60a5fa; border-radius:3px; vertical-align: -1px; margin-right: 4px;"></span>4회</span>
+                                <span style="display: inline-block; margin: 0 8px;"><span style="display: inline-block; width:12px; height:12px; background:#A67F68; border:1px solid #8A6854; border-radius:3px; vertical-align: -1px; margin-right: 4px;"></span>5회+</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1308,21 +1291,21 @@
             uniqueVisits.forEach(r => seatCounts[r.seat] = (seatCounts[r.seat] || 0) + 1);
 
             const getStyle = (c) => {
-                if (c === 0) return 'background: transparent; border: 1px solid #c2b5a3; color: #a39b8d;';
+                if (c === 0) return 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.2);';
                 if (c === 1) return 'background: #fecaca; border: 1px solid #f87171; color: #7f1d1d;';
                 if (c === 2) return 'background: #fef08a; border: 1px solid #facc15; color: #713f12;';
                 if (c === 3) return 'background: #bbf7d0; border: 1px solid #4ade80; color: #14532d;';
                 if (c === 4) return 'background: #bfdbfe; border: 1px solid #60a5fa; color: #1e3a8a;';
-                return 'background: #7a2828; border: 1px solid #5a1919; color: #ffffff; box-shadow: 0 0 3px rgba(122,40,40,0.5);';
+                return 'background: #A67F68; border: 1px solid #8A6854; color: #ffffff; box-shadow: 0 0 5px rgba(166,127,104,0.5);';
             };
 
-            const b = (id, l) => `<div style="width: 22px; height: 22px; border-radius: 1px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 10px; font-family: 'Baekbeom', sans-serif; flex-shrink: 0; ${getStyle(seatCounts[id]||0)}"></div>`;
+            const b = (id, l) => `<div style="width: 22px; height: 22px; border-radius: 4px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 10px; font-family: 'Baekbeom', sans-serif; flex-shrink: 0; ${getStyle(seatCounts[id]||0)}"></div>`;
             const eb = (n) => Array(n).fill(`<div style="width: 22px; height: 22px; background: transparent; flex-shrink: 0;"></div>`).join('');
             
-            const wrap = (name, inn) => `<div style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 2px 0;">
-                <span style="font-size: 11px; color: #5a4b40; width: 16px; font-weight: bold; text-align: right; margin-right: 6px; flex-shrink: 0;">${name}</span>
-                <div style="display: flex; gap: 4px; align-items: center; justify-content: center; flex-shrink: 0;">${inn}</div>
-                <span style="font-size: 11px; color: #5a4b40; width: 16px; font-weight: bold; text-align: left; margin-left: 6px; flex-shrink: 0;">${name}</span>
+            const wrap = (name, inn) => `<div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                <span style="font-size: 11px; color: rgba(255,255,255,0.4); width: 16px; font-weight: bold; text-align: right; margin-right: 8px;">${name}</span>
+                <div style="display: flex; gap: 4px; align-items: center; justify-content: center; width: 542px;">${inn}</div>
+                <span style="font-size: 11px; color: rgba(255,255,255,0.4); width: 16px; font-weight: bold; text-align: left; margin-left: 8px;">${name}</span>
             </div>`;
 
             let h = '';
