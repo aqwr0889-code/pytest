@@ -1307,7 +1307,7 @@
                 return 'background: rgba(122,40,40,0.95); border: 1px solid #5a1919; color: #ffffff; box-shadow: 0 0 3px rgba(122,40,40,0.5);';
             };
 
-            const b = (id, l) => `<div style="width: 23px; height: 23px; border-radius: 1px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 10.5px; font-family: 'Baekbeom', sans-serif; flex-shrink: 0; padding-bottom: 20px; ${getStyle(seatCounts[id]||0)}">${l}</div>`;
+            const b = (id, l) => `<div style="width: 23px; height: 23px; border-radius: 1px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 10.5px; font-family: 'Baekbeom', sans-serif; flex-shrink: 0; padding-bottom: 12px; ${getStyle(seatCounts[id]||0)}">${l}</div>`;
             const eb = (n) => Array(n).fill(`<div style="width: 23px; height: 23px; background: transparent; flex-shrink: 0;"></div>`).join('');
             
             const wrap = (name, inn) => `<div style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 2.5px 0;">
