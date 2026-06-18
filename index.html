@@ -1307,13 +1307,13 @@
                 return 'background: rgba(122,40,40,0.95); border: 1px solid #5a1919; color: #ffffff; box-shadow: 0 0 3px rgba(122,40,40,0.5);';
             };
 
-            const b = (id, l) => `<div style="width: 23px; height: 23px; border-radius: 1px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 10.5px; font-family: 'Baekbeom', sans-serif; flex-shrink: 0; padding-bottom: 12px; ${getStyle(seatCounts[id]||0)}">${l}</div>`;
+            const b = (id, l) => `<div style="width: 23px; height: 23px; border-radius: 1px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 10.5px; font-family: 'Baekbeom', sans-serif; flex-shrink: 0; padding-bottom: 20px; ${getStyle(seatCounts[id]||0)}">${l}</div>`;
             const eb = (n) => Array(n).fill(`<div style="width: 23px; height: 23px; background: transparent; flex-shrink: 0;"></div>`).join('');
             
             const wrap = (name, inn) => `<div style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 2.5px 0;">
-                <span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: right; margin-right: 10px; flex-shrink: 0; padding-bottom: 3px;">${name}</span>
+                <span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: right; margin-right: 10px; flex-shrink: 0; padding-bottom: 12px;">${name}</span>
                 <div style="display: flex; gap: 4px; align-items: center; justify-content: center; flex-shrink: 0;">${inn}</div>
-                <span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: left; margin-left: 10px; flex-shrink: 0; padding-bottom: 3px;">${name}</span>
+                <span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: left; margin-left: 10px; flex-shrink: 0; padding-bottom: 12px;">${name}</span>
             </div>`;
 
             const r = (row, start, end) => {
