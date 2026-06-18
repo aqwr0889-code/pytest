@@ -1327,7 +1327,17 @@
             const b = (id, l) => `<div style="width: 23px; height: 23px; border-radius: 1px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 10.5px; font-family: 'Baekbeom', sans-serif; flex-shrink: 0; ${getStyle(seatCounts[id]||0)}">
                 <span style="display: flex; align-items: center; justify-content: center; height: 100%; margin-top: 1px;">${l}</span>
             </div>`;
-            const eb = (n) => Array(n).fill(`<div style="width: 23px; height: 23px; background: transparent; flex-shrink: 0;"></div>`).join('');
+            
+            const eb = (n) => {
+                let html = '';
+                for(let i=0; i<Math.floor(n); i++) {
+                    html += `<div style="width: 23px; height: 23px; background: transparent; flex-shrink: 0;"></div>`;
+                }
+                if(n % 1 !== 0) { 
+                    html += `<div style="width: 9.5px; height: 23px; background: transparent; flex-shrink: 0;"></div>`;
+                }
+                return html;
+            };
             
             const wrap = (name, inn) => `<div style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 2.5px 0;">
                 <span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: right; margin-right: 10px; flex-shrink: 0;">${name}</span>
@@ -1335,21 +1345,33 @@
                 <span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: left; margin-left: 10px; flex-shrink: 0;">${name}</span>
             </div>`;
 
+            const r = (row, start, end) => {
+                let ht = '';
+                for (let s = start; s <= end; s++) ht += b(`${row}${s}`, s);
+                return ht;
+            };
+
             let h = '';
             
             h += `<div style="width: 320px; background: #3d3530; color: #fff; text-align: center; padding: 6px 0; font-size: 14px; font-weight: bold; letter-spacing: 5px; border-radius: 4px; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.4);">S T A G E</div>`;
 
-            const rng = (r, m) => { let ht=''; for(let s=1;s<=m;s++) ht+=b(`${r}${s}`,s); return ht; };
-            h += wrap('A', rng('A',19)) + wrap('B', rng('B',19)) + wrap('C', eb(0.5) + rng('C',18) + eb(0.5)) + wrap('D', rng('D',19));
-            h += wrap('E', eb(2)+rng('E',7).replace(/E/g,'E')+eb(1)+rng('E',17).substring(rng('E',7).length)); 
-            h += wrap('F', eb(2)+rng('F',7).replace(/F/g,'F')+eb(1)+rng('F',17).substring(rng('F',7).length)); 
-            h += wrap('G', eb(2)+rng('G',7).replace(/G/g,'G')+eb(1)+rng('G',17).substring(rng('G',7).length));
-
-            const rhij = (r) => { let ht=''; for(let s=1;s<=9;s++) ht+=b(`${r}${s}`,s); ht+=eb(1); for(let s=10;s<=19;s++) ht+=b(`${r}${s}`,s); return ht; };
-            h += wrap('H', rhij('H')) + wrap('I', rhij('I')) + wrap('J', rhij('J'));
-
-            let hk=''; for(let s=1;s<=9;s++) hk+=b(`K${s}`,s); hk+=eb(1); for(let s=10;s<=18;s++) hk+=b(`K${s}`,s); hk+=eb(1); h += wrap('K', hk);
-            let hl=eb(6); for(let s=1;s<=7;s++) hl+=b(`L${s}`,s); hl+=eb(6); h += wrap('L', hl);
+            h += wrap('A', r('A',1,19) + eb(1));
+            h += wrap('B', r('B',1,19) + eb(1));
+            h += wrap('C', eb(0.5) + r('C',1,18) + eb(1.5));
+            h += wrap('D', r('D',1,19) + eb(1));
+            
+            h += `<div style="width: 100%; height: 12px;"></div>`;
+            
+            h += wrap('E', eb(2) + r('E',1,7) + eb(1) + r('E',8,17));
+            h += wrap('F', eb(2) + r('F',1,7) + eb(1) + r('F',8,17));
+            h += wrap('G', eb(2) + r('G',1,7) + eb(1) + r('G',8,17));
+            
+            h += wrap('H', r('H',1,9) + eb(1) + r('H',10,19));
+            h += wrap('I', r('I',1,9) + eb(1) + r('I',10,19));
+            h += wrap('J', r('J',1,9) + eb(1) + r('J',10,19));
+            
+            h += wrap('K', r('K',1,9) + eb(1) + r('K',10,18) + eb(1));
+            h += wrap('L', eb(6.5) + r('L',1,7) + eb(6.5));
 
             return h;
         }
