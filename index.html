@@ -1262,13 +1262,13 @@
 
                             <div id="exportSeatingGrid" style="display:flex; flex-direction:column; gap: 5px; width: 100%; align-items: center; justify-content: center; position: relative; z-index: 1;"></div>
                             
-                            <div style="position: relative; z-index: 1; text-align: center; margin-top: 35px; font-size: 14px; color: #5a4b40; line-height: 1; font-weight: bold;">
-                                <span style="display: inline-block; margin: 0 6px;"><span style="display: inline-block; width:13px; height:13px; background: rgba(250,245,235,0.9); border:1px solid #a39b8d; vertical-align: -2px; margin-right: 5px;"></span>0</span>
-                                <span style="display: inline-block; margin: 0 6px;"><span style="display: inline-block; width:13px; height:13px; background:#fecaca; border:1px solid #f87171; vertical-align: -2px; margin-right: 5px;"></span>1</span>
-                                <span style="display: inline-block; margin: 0 6px;"><span style="display: inline-block; width:13px; height:13px; background:#fef08a; border:1px solid #facc15; vertical-align: -2px; margin-right: 5px;"></span>2</span>
-                                <span style="display: inline-block; margin: 0 6px;"><span style="display: inline-block; width:13px; height:13px; background:#bbf7d0; border:1px solid #4ade80; vertical-align: -2px; margin-right: 5px;"></span>3</span>
-                                <span style="display: inline-block; margin: 0 6px;"><span style="display: inline-block; width:13px; height:13px; background:#bfdbfe; border:1px solid #60a5fa; vertical-align: -2px; margin-right: 5px;"></span>4</span>
-                                <span style="display: inline-block; margin: 0 6px;"><span style="display: inline-block; width:13px; height:13px; background:#7a2828; border:1px solid #5a1919; vertical-align: -2px; margin-right: 5px;"></span>5+</span>
+                            <div style="position: relative; z-index: 1; display: flex; justify-content: center; gap: 12px; margin-top: 35px; font-size: 14px; color: #5a4b40; font-weight: bold;">
+                                <div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background: rgba(250,245,235,0.9); border:1px solid #a39b8d; margin-right: 5px;"></div><span style="padding-bottom: 3px;">0</span></div>
+                                <div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#fecaca; border:1px solid #f87171; margin-right: 5px;"></div><span style="padding-bottom: 3px;">1</span></div>
+                                <div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#fef08a; border:1px solid #facc15; margin-right: 5px;"></div><span style="padding-bottom: 3px;">2</span></div>
+                                <div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#bbf7d0; border:1px solid #4ade80; margin-right: 5px;"></div><span style="padding-bottom: 3px;">3</span></div>
+                                <div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#bfdbfe; border:1px solid #60a5fa; margin-right: 5px;"></div><span style="padding-bottom: 3px;">4</span></div>
+                                <div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#7a2828; border:1px solid #5a1919; margin-right: 5px;"></div><span style="padding-bottom: 3px;">5+</span></div>
                             </div>
                         </div>
 
@@ -1307,13 +1307,13 @@
                 return 'background: rgba(122,40,40,0.95); border: 1px solid #5a1919; color: #ffffff; box-shadow: 0 0 3px rgba(122,40,40,0.5);';
             };
 
-            const b = (id, l) => `<div style="width: 23px; height: 23px; border-radius: 1px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 10.5px; font-family: 'Baekbeom', sans-serif; flex-shrink: 0; padding-bottom: 2px; ${getStyle(seatCounts[id]||0)}">${l}</div>`;
+            const b = (id, l) => `<div style="width: 23px; height: 23px; border-radius: 1px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 10.5px; font-family: 'Baekbeom', sans-serif; flex-shrink: 0; padding-bottom: 4px; ${getStyle(seatCounts[id]||0)}">${l}</div>`;
             const eb = (n) => Array(n).fill(`<div style="width: 23px; height: 23px; background: transparent; flex-shrink: 0;"></div>`).join('');
             
             const wrap = (name, inn) => `<div style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 2.5px 0;">
-                <span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: right; margin-right: 10px; flex-shrink: 0;">${name}</span>
+                <span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: right; margin-right: 10px; flex-shrink: 0; padding-bottom: 3px;">${name}</span>
                 <div style="display: flex; gap: 4px; align-items: center; justify-content: center; flex-shrink: 0;">${inn}</div>
-                <span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: left; margin-left: 10px; flex-shrink: 0;">${name}</span>
+                <span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: left; margin-left: 10px; flex-shrink: 0; padding-bottom: 3px;">${name}</span>
             </div>`;
 
             const r = (row, start, end) => {
@@ -1324,7 +1324,7 @@
 
             let h = '';
             
-            h += `<div style="width: 320px; background: #3d3530; color: #fff; text-align: center; padding: 6px 0; font-size: 14px; font-weight: bold; letter-spacing: 5px; border-radius: 4px; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.4);">S T A G E</div>`;
+            h += `<div style="width: 320px; background: #3d3530; color: #fff; text-align: center; padding: 4px 0 8px 0; font-size: 14px; font-weight: bold; letter-spacing: 5px; border-radius: 4px; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.4);">S T A G E</div>`;
 
             h += wrap('A', r('A',1,19) + eb(1));
             h += wrap('B', r('B',1,19) + eb(1));
