@@ -29,6 +29,12 @@
             }
         }
     </script>
+
+    <!-- Vercel Web Analytics -->
+    <script> window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+    
     <style>
         @font-face {
             font-family: 'Paperlogy';
@@ -1252,9 +1258,9 @@
                             
                             <div style="position: absolute; inset: 0; background-image: url('${safeTex2}'); background-size: cover; opacity: 0.15; pointer-events: none; z-index: 0;"></div>
 
-                            <!-- 여기서 가로선(border-bottom) 속성을 지웠습니다! -->
+                            <!-- 박열 로고 이미지 크기를 90px로 키웠습니다 -->
                             <div style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 15px; margin-bottom: 25px;">
-                                <img src="${safePyLogo}" style="height: 60px; object-fit: contain; filter: grayscale(100%) contrast(200%) brightness(0.2); opacity: 0.85;" alt="박열">
+                                <img src="${safePyLogo}" style="height: 90px; object-fit: contain; filter: grayscale(100%) contrast(200%) brightness(0.2); opacity: 0.85;" alt="박열">
                             </div>
 
                             <div style="position: relative; z-index: 1; text-align: center; font-size: 22px; color: #2c2825; margin-bottom: 25px;">
