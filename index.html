@@ -30,7 +30,6 @@
         }
     </script>
 
-    <!-- Vercel Web Analytics -->
     <script> window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     </script>
     <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
@@ -113,10 +112,19 @@
                 </div>
             </div>
 
-            <div class="flex gap-2">
-                <button onclick="fullReset()" class="bg-py-800/50 border border-rose-900/50 text-rose-300 hover:bg-rose-900 hover:text-white px-3 py-2 rounded-xl text-xs transition flex flex-col justify-center items-center shadow-inner group">
+            <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+                <button onclick="fullReset()" class="bg-py-800/50 border border-rose-900/50 text-rose-300 hover:bg-rose-900 hover:text-white px-3 py-2 rounded-xl text-xs transition flex flex-col justify-center items-center shadow-inner group flex-shrink-0">
                     <i class="fa-solid fa-rotate-right mb-1 group-hover:animate-spin"></i> 전체 리셋
                 </button>
+
+                <div class="bg-py-900 border border-py-700 px-4 py-2 rounded-xl text-center shadow-inner relative group min-w-[110px] flex-shrink-0">
+                    <span class="text-[11px] block text-py-300 font-medium">기타 할인권</span>
+                    <span id="globalOtherCouponCount" class="text-lg font-bold text-purple-400">0장</span>
+                    <div class="absolute inset-0 bg-py-900/90 hidden group-hover:flex items-center justify-center rounded-xl gap-2 backdrop-blur-sm border border-py-700">
+                        <button onclick="adjustTicket('otherCoupons', -1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-rose-500 transition">-</button>
+                        <button onclick="adjustTicket('otherCoupons', 1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-emerald-500 transition">+</button>
+                    </div>
+                </div>
                 
                 <div class="bg-py-900 border border-py-700 px-4 py-2 rounded-xl text-center shadow-inner min-w-[110px] flex-shrink-0">
                     <span class="text-[11px] block text-py-300 font-medium">40% 할인권</span>
@@ -240,11 +248,13 @@
                                     <option value="1">1개</option><option value="2">2개</option><option value="3">3개</option>
                                 </select>
                             </div>
-                            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-center">
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="useCoupon" onchange="toggleCouponCheckbox()" class="w-3.5 h-3.5 text-py-500 rounded">
-                                    <span class="text-[11px] font-semibold text-slate-700">할인권 사용</span>
-                                </label>
+                            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                <label class="block text-[10px] font-semibold text-slate-500 mb-1">할인권 사용</label>
+                                <select id="couponType" onchange="handleCouponChange(this)" class="w-full bg-white border border-slate-200 p-1 rounded-lg text-xs focus:outline-none focus:border-py-500">
+                                    <option value="">미사용</option>
+                                    <option value="40">40% 할인권</option>
+                                    <option value="other">기타 할인권</option>
+                                </select>
                             </div>
                         </div>
 
@@ -440,7 +450,6 @@
 
                 if (record.couponType === '40') appData.coupons--;
                 else if (record.couponType === 'other') appData.otherCoupons--;
-                }
 
                 let card = appData.cards.find(c => c.id === record.cardId);
                 
@@ -630,7 +639,8 @@
             renderAll(); 
         }
 
-        function fullReset() { if(confirm("정말 모두 초기화하시겠습니까?")) { appData = { cards: [{ id: Date.now(), stamps: 0, isActive: true }], coupons: 0, ostTickets: 0, records: [] }; saveData(); alert('초기화 완료'); } }
+        function fullReset() { if(confirm("정말 모두 초기화하시겠습니까?")) { appData = { cards: [{ id: Date.now(), stamps: 0, isActive: true }], coupons: 0, ostTickets: 0, records: [], baseOtherCoupons: 0 }; saveData(); alert('초기화 완료'); } }
+        
         function adjustTicket(type, amount) { 
             if (type === 'otherCoupons') {
                 appData.baseOtherCoupons = Math.max(0, (appData.baseOtherCoupons || 0) + amount);
@@ -719,8 +729,6 @@
             }
             saveData();
         }
-
-        function toggleCouponCheckbox() { const cb = document.getElementById('useCoupon'); if (cb.checked && appData.coupons <= 0) { alert('할인권이 없습니다.'); cb.checked = false; } }
         
         function editRecord(id) {
             const r = appData.records.find(rec => rec.id === id); if (!r) return;
@@ -784,7 +792,7 @@
                     r.cardId = Number(document.getElementById('editCardSelect').value);
                     r.date = date; r.time = time; r.parkyeol = parkyeol; r.fumiko = fumiko; r.ryuji = ryuji; 
                     r.seat = seat; r.qty = targetQty; 
-                    r.couponType = couponType; r.useCoupon = (couponType === '40'); // 저장 방식 변경
+                    r.couponType = couponType; r.useCoupon = (couponType === '40');
                 }
             } else {
                 if (couponType === '40' && appData.coupons <= 0) return alert('40% 할인권이 부족합니다.');
@@ -854,7 +862,7 @@
                                 <span class="text-sm font-bold text-slate-800">${r.seat}</span>
                             </div>
                             <div class="text-[10px]">
-                                ${r.useCoupon ? '<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded font-bold">할인권 적용 O</span>' : '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded font-bold">할인권 미적용</span>'}
+                                ${r.couponType === '40' || r.useCoupon ? '<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded font-bold">40% 할인 O</span>' : r.couponType === 'other' ? '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded font-bold">기타 할인 O</span>' : '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded font-bold">할인 미사용</span>'}
                             </div>
                         </div>
                     `;
@@ -886,10 +894,11 @@
                                 <option value="2">도장 2개 적립</option>
                                 <option value="3">도장 3개 적립</option>
                             </select>
-                            <label class="flex items-center gap-1.5 bg-slate-50 px-2 rounded-lg border border-slate-200 cursor-pointer">
-                                <input type="checkbox" id="quickCoupon" class="w-3.5 h-3.5 text-py-500 rounded">
-                                <span class="text-[10px] font-semibold text-slate-700 whitespace-nowrap">할인권 사용</span>
-                            </label>
+                            <select id="quickCouponType" onchange="handleCouponChange(this)" class="flex-1 border border-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 bg-slate-50">
+                                <option value="">할인 미사용</option>
+                                <option value="40">40% 할인권</option>
+                                <option value="other">기타 할인권</option>
+                            </select>
                         </div>
                         
                         <button onclick="quickAddRecord('${date}', '${time}', '${cast[0]}', '${cast[1]}', '${cast[2]}')" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold hover:bg-slate-900 transition mt-1">
@@ -912,7 +921,6 @@
             if (!seat) seat = '관극 예정'; else if (!/^[A-L]([1-9]|1[0-9])$/.test(seat)) return alert('유효하지 않은 좌석명입니다. (예: A10)');
             
             const qty = parseInt(document.getElementById('quickStamps').value);
-            // [핵심 변경] 드롭다운 값 읽어오기
             const couponType = document.getElementById('quickCouponType').value;
             
             const selectedCardId = Number(document.getElementById('quickCardId').value);
@@ -1241,13 +1249,12 @@
                             
                             <div style="position: absolute; inset: 0; background-image: url('${safeTex2}'); background-size: cover; opacity: 0.15; pointer-events: none; z-index: 0;"></div>
 
-                            <!-- 박열 로고 이미지 크기를 90px로 키웠습니다 -->
                             <div style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 15px; margin-bottom: 25px;">
                                 <img src="${safePyLogo}" style="height: 90px; object-fit: contain; filter: grayscale(100%) contrast(200%) brightness(0.2); opacity: 0.85;" alt="박열">
                             </div>
 
                             <div style="position: relative; z-index: 1; text-align: center; font-size: 22px; color: #2c2825; margin-bottom: 25px;">
-                                총 <span style="color: #7a2828; font-weight: bold; font-size: 40px; margin: 0 6px; border-bottom: 2px solid #7a2828;">${globalStats.totalVisits}</span> 회
+                                총 <span style="color: #7a2828; font-weight: bold; font-size: 40px; margin: 0 6px;">${globalStats.totalVisits}</span> 회
                             </div>
 
                             <div id="exportSeatingGrid" style="display:flex; flex-direction:column; gap: 5px; width: 100%; align-items: center; justify-content: center; position: relative; z-index: 1;"></div>
@@ -1365,8 +1372,15 @@
             if(ordGrps.length === 0) tbody.innerHTML = `<tr><td class="p-8 text-center text-slate-400">등록된 일지가 없습니다.</td></tr>`;
             else ordGrps.slice().reverse().forEach(g => {
                 const main = g.records[0], cStr = g.records.map(r => { const cIdx = appData.cards.findIndex(c => c.id === r.cardId); return cIdx > -1 ? `판 #${cIdx + 1}` : '삭제됨'; }).map(n => `<span class="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[9px] mr-1">[${n}]</span>`).join('');
-                const qStr = g.records.map(r => `+${r.qty}`).join(', '), usedCp = g.records.some(r => r.useCoupon);
-                tbody.innerHTML += `<tr class="hover:bg-slate-50 transition"><td class="py-3 px-1"><div class="flex justify-between items-start mb-1"><div class="font-bold text-slate-800 flex items-center flex-wrap gap-y-1"><span class="bg-stone-200 text-stone-700 px-1.5 py-0.5 rounded text-[9px] mr-1 font-bold">[자${sMap[g.gid]}]</span>${cStr}<span class="ml-0.5">${main.date} <span class="text-py-500 text-[10px] font-bold">${main.time}</span></span></div><div class="flex gap-1.5 items-center pl-2">${usedCp ? '<span class="bg-amber-100 text-amber-800 text-[9px] font-bold px-1 rounded flex-shrink-0">할인</span>' : ''}<span class="text-py-500 font-bold whitespace-nowrap">${qStr}</span></div></div><div class="flex justify-between items-center text-slate-600 mt-1"><span>${main.parkyeol}, ${main.fumiko}, ${main.ryuji}</span><div class="flex gap-3 items-center"><span class="font-bold text-py-900">${main.seat}</span><div class="flex gap-1.5"><button onclick="editRecord(${main.id})" class="text-[10px] bg-slate-100 text-slate-500 hover:bg-amber-100 hover:text-amber-600 px-1.5 py-0.5 rounded transition">수정</button><button onclick="deleteRecord(${main.id})" class="text-[10px] bg-slate-100 text-slate-500 hover:bg-rose-100 hover:text-rose-600 px-1.5 py-0.5 rounded transition">삭제</button></div></div></div></td></tr>`;            });
+                const qStr = g.records.map(r => `+${r.qty}`).join(', ');
+                
+                const used40 = g.records.some(r => r.couponType === '40' || r.useCoupon);
+                const usedOther = g.records.some(r => r.couponType === 'other');
+                let cpBadge = '';
+                if(used40) cpBadge += '<span class="bg-amber-100 text-amber-800 text-[9px] font-bold px-1 rounded flex-shrink-0 mr-0.5">40%할인</span>';
+                if(usedOther) cpBadge += '<span class="bg-purple-100 text-purple-800 text-[9px] font-bold px-1 rounded flex-shrink-0 mr-0.5">기타할인</span>';
+
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 transition"><td class="py-3 px-1"><div class="flex justify-between items-start mb-1"><div class="font-bold text-slate-800 flex items-center flex-wrap gap-y-1"><span class="bg-stone-200 text-stone-700 px-1.5 py-0.5 rounded text-[9px] mr-1 font-bold">[자${sMap[g.gid]}]</span>${cStr}<span class="ml-0.5">${main.date} <span class="text-py-500 text-[10px] font-bold">${main.time}</span></span></div><div class="flex gap-1.5 items-center pl-2">${cpBadge}<span class="text-py-500 font-bold whitespace-nowrap">${qStr}</span></div></div><div class="flex justify-between items-center text-slate-600 mt-1"><span>${main.parkyeol}, ${main.fumiko}, ${main.ryuji}</span><div class="flex gap-3 items-center"><span class="font-bold text-py-900">${main.seat}</span><div class="flex gap-1.5"><button onclick="editRecord(${main.id})" class="text-[10px] bg-slate-100 text-slate-500 hover:bg-amber-100 hover:text-amber-600 px-1.5 py-0.5 rounded transition">수정</button><button onclick="deleteRecord(${main.id})" class="text-[10px] bg-slate-100 text-slate-500 hover:bg-rose-100 hover:text-rose-600 px-1.5 py-0.5 rounded transition">삭제</button></div></div></div></td></tr>`;            });
             
             generateHeatmap(); 
             calculateStatsSheet();
