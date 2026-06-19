@@ -112,28 +112,32 @@
                 </div>
             </div>
 
-            <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-                <button onclick="fullReset()" class="bg-py-800/50 border border-rose-900/50 text-rose-300 hover:bg-rose-900 hover:text-white px-3 py-2 rounded-xl text-xs transition flex flex-col justify-center items-center shadow-inner group flex-shrink-0">
-                    <i class="fa-solid fa-rotate-right mb-1 group-hover:animate-spin"></i> 전체 리셋
+            <div class="grid grid-cols-4 gap-1.5 md:gap-2 w-full md:w-auto">
+                
+                <button onclick="fullReset()" class="bg-py-800/50 border border-rose-900/50 text-rose-300 hover:bg-rose-900 hover:text-white px-1 py-1.5 md:px-3 md:py-2 rounded-lg md:rounded-xl transition flex flex-col justify-center items-center shadow-inner group">
+                    <i class="fa-solid fa-rotate-right mb-0.5 md:mb-1 group-hover:animate-spin text-xs md:text-base"></i> 
+                    <span class="text-[9.5px] md:text-xs leading-tight text-center tracking-tighter">전체<br class="md:hidden">리셋</span>
                 </button>
 
-                <div class="bg-py-900 border border-py-700 px-4 py-2 rounded-xl text-center shadow-inner relative group min-w-[110px] flex-shrink-0">
-                    <span class="text-[11px] block text-py-300 font-medium">기타 할인권</span>
-                    <span id="globalOtherCouponCount" class="text-lg font-bold text-py-200">0장</span>
-                    <div class="absolute inset-0 bg-py-900/90 hidden group-hover:flex items-center justify-center rounded-xl gap-2 backdrop-blur-sm border border-py-700">
-                        <button onclick="adjustTicket('otherCoupons', -1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-rose-500 transition">-</button>
-                        <button onclick="adjustTicket('otherCoupons', 1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-emerald-500 transition">+</button>
+                <div class="bg-py-900 border border-py-700 px-1 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl text-center shadow-inner relative group flex flex-col justify-center items-center">
+                    <span class="text-[8.5px] md:text-[11px] block text-py-300 font-medium tracking-tighter leading-tight mb-0.5 md:mb-0">기타<br class="md:hidden">할인권</span>
+                    <span id="globalOtherCouponCount" class="text-[13px] md:text-lg font-bold text-purple-400 leading-none mt-auto">0장</span>
+                    
+                    <div class="absolute inset-0 bg-py-900/95 hidden group-hover:flex items-center justify-center rounded-lg md:rounded-xl gap-1.5 md:gap-2 backdrop-blur-sm border border-py-700">
+                        <button onclick="adjustTicket('otherCoupons', -1)" class="w-5 h-5 md:w-6 md:h-6 bg-py-700 text-white rounded-full text-xs hover:bg-rose-500 transition flex items-center justify-center">-</button>
+                        <span id="hoverOtherCouponCount" class="text-[11px] md:text-xs font-bold text-purple-300 min-w-[8px] text-center">0</span>
+                        <button onclick="adjustTicket('otherCoupons', 1)" class="w-5 h-5 md:w-6 md:h-6 bg-py-700 text-white rounded-full text-xs hover:bg-emerald-500 transition flex items-center justify-center">+</button>
                     </div>
                 </div>
                 
-                <div class="bg-py-900 border border-py-700 px-4 py-2 rounded-xl text-center shadow-inner min-w-[110px] flex-shrink-0">
-                    <span class="text-[11px] block text-py-300 font-medium">40% 할인권</span>
-                    <span id="globalCouponCount" class="text-lg font-bold text-py-400">0장</span>
+                <div class="bg-py-900 border border-py-700 px-1 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl text-center shadow-inner flex flex-col justify-center items-center">
+                    <span class="text-[8.5px] md:text-[11px] block text-py-300 font-medium tracking-tighter leading-tight mb-0.5 md:mb-0">40%<br class="md:hidden">할인권</span>
+                    <span id="globalCouponCount" class="text-[13px] md:text-lg font-bold text-py-400 leading-none mt-auto">0장</span>
                 </div>
 
-                <div class="bg-py-900 border border-py-700 px-4 py-2 rounded-xl text-center shadow-inner min-w-[110px] flex-shrink-0">
-                    <span class="text-[11px] block text-py-300 font-medium">OST 교환권</span>
-                    <span id="globalOstCount" class="text-lg font-bold text-amber-400">0장</span>
+                <div class="bg-py-900 border border-py-700 px-1 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl text-center shadow-inner flex flex-col justify-center items-center">
+                    <span class="text-[8.5px] md:text-[11px] block text-py-300 font-medium tracking-tighter leading-tight mb-0.5 md:mb-0">OST<br class="md:hidden">교환권</span>
+                    <span id="globalOstCount" class="text-[13px] md:text-lg font-bold text-amber-400 leading-none mt-auto">0장</span>
                 </div>
             </div>
         </header>
@@ -1348,6 +1352,9 @@
             document.getElementById('globalCouponCount').innerText = `${appData.coupons}장`;
             document.getElementById('globalOstCount').innerText = `${appData.ostTickets}장`;
             document.getElementById('globalOtherCouponCount').innerText = `${appData.otherCoupons}장`;
+
+            const hoverCount = document.getElementById('hoverOtherCouponCount');
+            if (hoverCount) hoverCount.innerText = appData.otherCoupons;
 
             const cb = document.getElementById('cardContainer'); cb.innerHTML = '';
             appData.cards.forEach((c, i) => {
