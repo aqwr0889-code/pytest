@@ -113,12 +113,21 @@
                 </div>
             </div>
 
-            <div class="flex gap-2">
-                <button onclick="fullReset()" class="bg-py-800/50 border border-rose-900/50 text-rose-300 hover:bg-rose-900 hover:text-white px-3 py-2 rounded-xl text-xs transition flex flex-col justify-center items-center shadow-inner group">
+            <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+                <button onclick="fullReset()" class="bg-py-800/50 border border-rose-900/50 text-rose-300 hover:bg-rose-900 hover:text-white px-3 py-2 rounded-xl text-xs transition flex flex-col justify-center items-center shadow-inner group flex-shrink-0">
                     <i class="fa-solid fa-rotate-right mb-1 group-hover:animate-spin"></i> 전체 리셋
                 </button>
+
+                <div class="bg-py-900 border border-py-700 px-4 py-2 rounded-xl text-center shadow-inner relative group min-w-[110px] flex-shrink-0">
+                    <span class="text-[11px] block text-py-300 font-medium">기타 할인권</span>
+                    <span id="globalOtherCouponCount" class="text-lg font-bold text-purple-400">0장</span>
+                    <div class="absolute inset-0 bg-py-900/90 hidden group-hover:flex items-center justify-center rounded-xl gap-2 backdrop-blur-sm border border-py-700">
+                        <button onclick="adjustTicket('otherCoupons', -1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-rose-500 transition">-</button>
+                        <button onclick="adjustTicket('otherCoupons', 1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-emerald-500 transition">+</button>
+                    </div>
+                </div>
                 
-                <div class="bg-py-900 border border-py-700 px-4 py-2 rounded-xl text-center shadow-inner relative group min-w-[110px]">
+                <div class="bg-py-900 border border-py-700 px-4 py-2 rounded-xl text-center shadow-inner relative group min-w-[110px] flex-shrink-0">
                     <span class="text-[11px] block text-py-300 font-medium">40% 할인권</span>
                     <span id="globalCouponCount" class="text-lg font-bold text-py-400">0장</span>
                     <div class="absolute inset-0 bg-py-900/90 hidden group-hover:flex items-center justify-center rounded-xl gap-2 backdrop-blur-sm border border-py-700">
@@ -127,7 +136,7 @@
                     </div>
                 </div>
 
-                <div class="bg-py-900 border border-py-700 px-4 py-2 rounded-xl text-center shadow-inner relative group min-w-[110px]">
+                <div class="bg-py-900 border border-py-700 px-4 py-2 rounded-xl text-center shadow-inner relative group min-w-[110px] flex-shrink-0">
                     <span class="text-[11px] block text-py-300 font-medium">OST 교환권</span>
                     <span id="globalOstCount" class="text-lg font-bold text-amber-400">0장</span>
                     <div class="absolute inset-0 bg-py-900/90 hidden group-hover:flex items-center justify-center rounded-xl gap-2 backdrop-blur-sm border border-py-700">
@@ -248,13 +257,14 @@
                                     <option value="1">1개</option><option value="2">2개</option><option value="3">3개</option>
                                 </select>
                             </div>
-                            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-center">
-                                <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="useCoupon" onchange="toggleCouponCheckbox()" class="w-3.5 h-3.5 text-py-500 rounded">
-                                    <span class="text-[11px] font-semibold text-slate-700">할인권 사용</span>
-                                </label>
+                            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                <label class="block text-[10px] font-semibold text-slate-500 mb-1">할인권 사용</label>
+                                <select id="couponType" onchange="handleCouponChange(this)" class="w-full bg-white border border-slate-200 p-1 rounded-lg text-xs focus:outline-none focus:border-py-500">
+                                    <option value="">미사용</option>
+                                    <option value="40">40% 할인권</option>
+                                    <option value="other">기타 할인권</option>
+                                </select>
                             </div>
-                        </div>
 
                         <button type="submit" id="submitBtn" class="w-full bg-slate-900 text-white py-2.5 rounded-xl hover:bg-slate-800 transition text-sm font-medium mt-2">
                             💾 저장 및 적립
@@ -440,20 +450,20 @@
             appData.cards.forEach(c => c.stamps = 0);
             appData.coupons = 0;
             appData.ostTickets = 0;
+            
+            appData.otherCoupons = appData.baseOtherCoupons || 0; 
 
             appData.records.forEach(record => {
-                if (record.useCoupon) {
-                    appData.coupons--;
-                }
+                if (record.useCoupon === true && !record.couponType) record.couponType = '40';
+                else if (record.useCoupon === false && !record.couponType) record.couponType = '';
+
+                if (record.couponType === '40') appData.coupons--;
+                else if (record.couponType === 'other') appData.otherCoupons--;
 
                 let card = appData.cards.find(c => c.id === record.cardId);
-                
                 if (!card) {
                     card = appData.cards[0]; 
-                    if (!card) {
-                        card = { id: Date.now(), stamps: 0, isActive: true };
-                        appData.cards.push(card);
-                    }
+                    if (!card) { card = { id: Date.now(), stamps: 0, isActive: true }; appData.cards.push(card); }
                     record.cardId = card.id;
                 }
 
@@ -469,8 +479,9 @@
         let eventsByDate = {};
         
         let appData = JSON.parse(localStorage.getItem('parkyeolSheetStorage')) || {
-            cards: [{ id: Date.now(), stamps: 0, isActive: true }], coupons: 0, ostTickets: 0, records: []
+            cards: [{ id: Date.now(), stamps: 0, isActive: true }], coupons: 0, ostTickets: 0, records: [], baseOtherCoupons: 0
         };
+        if (appData.baseOtherCoupons === undefined) appData.baseOtherCoupons = 0;
 
         let globalStats = null;
         let generatedImageUrl = '';
@@ -482,19 +493,11 @@
         else if (__todayForCal.getFullYear() > 2026 || calMonth > 8) calMonth = 8;
         let currentCalDate = new Date(calYear, calMonth, 1);
 
-        const ribbonColors = [
-            'bg-blue-100 text-blue-800 border-blue-200',
-            'bg-pink-100 text-pink-800 border-pink-200',
-            'bg-teal-100 text-teal-800 border-teal-200',
-            'bg-yellow-100 text-yellow-800 border-yellow-200',
-            'bg-purple-100 text-purple-800 border-purple-200',
-            'bg-orange-100 text-orange-800 border-orange-200',
-            'bg-green-100 text-green-800 border-green-200'
-        ];
+        const ribbonColors = ['bg-blue-100 text-blue-800 border-blue-200','bg-pink-100 text-pink-800 border-pink-200','bg-teal-100 text-teal-800 border-teal-200','bg-yellow-100 text-yellow-800 border-yellow-200','bg-purple-100 text-purple-800 border-purple-200','bg-orange-100 text-orange-800 border-orange-200','bg-green-100 text-green-800 border-green-200'];
         let eventColorMap = {};
-
         let calFilterP = '', calFilterF = '', calFilterR = '';
-        
+        let colorIndex = 0;
+
         function updateCalFilter() {
             calFilterP = document.getElementById('calFilterP').value;
             calFilterF = document.getElementById('calFilterF').value;
@@ -502,15 +505,8 @@
             renderCalendar();
         }
 
-        let colorIndex = 0;
-
         const imagePaths = {
-            poster: './메인 포스터.jpg',
-            tex2: './질감2.jpg',
-            tex3: './질감3.jpg',
-            tex4: './질감4.jpg',
-            cuffs: './수갑.jpg',
-            pyLogo: './py.webp',
+            poster: './메인 포스터.jpg', tex2: './질감2.jpg', tex3: './질감3.jpg', tex4: './질감4.jpg', cuffs: './수갑.jpg', pyLogo: './py.webp',
             actors: {
                 '손유동': './박열_손유동.jpg', '현석준': './박열_현석준.jpg', '백기범': './박열_백기범.jpg',
                 '최수진': './후미코_최수진.jpg', '허윤슬': './후미코_허윤슬.jpg', '임예진': './후미코_임예진.jpg',
@@ -525,31 +521,23 @@
             const linkElement = document.createElement('a');
             linkElement.setAttribute('href', dataUri);
             linkElement.setAttribute('download', exportFileName);
-            document.body.appendChild(linkElement);
-            linkElement.click();
-            document.body.removeChild(linkElement);
+            document.body.appendChild(linkElement); linkElement.click(); document.body.removeChild(linkElement);
         }
 
         function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+            const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
                     if (imported && imported.cards && imported.records) {
                         appData = imported;
-                        saveData();
-                        alert('✅ 데이터 복원 완료!');
-                    } else {
-                        alert('🚨 올바른 백업 파일(JSON)이 아닙니다.');
-                    }
-                } catch (err) {
-                    alert('🚨 파일을 읽는 중 오류가 발생했습니다.');
-                }
+                        if (appData.baseOtherCoupons === undefined) appData.baseOtherCoupons = 0;
+                        saveData(); alert('✅ 데이터 복원 완료!');
+                    } else { alert('🚨 올바른 백업 파일(JSON)이 아닙니다.'); }
+                } catch (err) { alert('🚨 파일을 읽는 중 오류가 발생했습니다.'); }
             };
-            reader.readAsText(file);
-            event.target.value = '';
+            reader.readAsText(file); event.target.value = '';
         }
 
         async function loadScheduleFromGoogleSheet() {
@@ -559,54 +547,30 @@
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`서버 응답 오류 (상태 코드: ${response.status})`);
-
                 const csvText = await response.text();
-                if (csvText.trim().toLowerCase().startsWith('<!doctype html>') || csvText.trim().toLowerCase().startsWith('<html')) {
-                    throw new Error('데이터 대신 웹페이지(HTML)가 반환되었습니다.\n스프레드시트 권한 확인 요망.');
-                }
+                if (csvText.trim().toLowerCase().startsWith('<!doctype html>') || csvText.trim().toLowerCase().startsWith('<html')) throw new Error('데이터 대신 웹페이지가 반환되었습니다.');
                 
                 const rows = parseCSV(csvText);
-                
                 rows.forEach((cols, index) => {
                     if (index === 0 || cols.length < 2) return; 
-                    
-                    let rawDate = cols[0] ? cols[0].trim() : '';
-                    if (!rawDate) return;
-
-                    const nums = rawDate.match(/\d+/g);
-                    if (!nums || nums.length < 2) return; 
-
-                    let mm = (nums.length >= 3 ? nums[1] : nums[0]).padStart(2, '0');
-                    let dd = (nums.length >= 3 ? nums[2] : nums[1]).padStart(2, '0');
+                    let rawDate = cols[0] ? cols[0].trim() : ''; if (!rawDate) return;
+                    const nums = rawDate.match(/\d+/g); if (!nums || nums.length < 2) return; 
+                    let mm = (nums.length >= 3 ? nums[1] : nums[0]).padStart(2, '0'), dd = (nums.length >= 3 ? nums[2] : nums[1]).padStart(2, '0');
                     const dateStr = `2026-${mm}-${dd}`;
-                    
-                    let timeStr = cols[1] ? cols[1].trim() : '';
-                    if (!timeStr) return;
+                    let timeStr = cols[1] ? cols[1].trim() : ''; if (!timeStr) return;
                     if (/^\d{1,2}:\d{2}:\d{2}$/.test(timeStr)) timeStr = timeStr.substring(0, 5);
                     
                     if (!castSchedule[dateStr]) castSchedule[dateStr] = {};
-                    castSchedule[dateStr][timeStr] = [
-                        cols[2] ? cols[2].trim() : '', 
-                        cols[3] ? cols[3].trim() : '', 
-                        cols[4] ? cols[4].trim() : ''
-                    ];
-
-                    let eventStr = cols[5] ? cols[5].trim() : '';
-                    if (eventStr) {
-                        eventsByDate[dateStr] = eventStr;
-                    }
+                    castSchedule[dateStr][timeStr] = [ cols[2] ? cols[2].trim() : '', cols[3] ? cols[3].trim() : '', cols[4] ? cols[4].trim() : '' ];
+                    let eventStr = cols[5] ? cols[5].trim() : ''; if (eventStr) eventsByDate[dateStr] = eventStr;
                 });
             } catch (error) {
-                console.error('스케줄 로드 실패:', error);
-                alert(`🚨 스케줄 데이터를 불러오지 못했습니다!\n\n${error.message}`);
-            } finally {
-                document.getElementById('scheduleLoadingOverlay').style.display = 'none';
-            }
+                console.error('스케줄 로드 실패:', error); alert(`🚨 스케줄 데이터를 불러오지 못했습니다!\n\n${error.message}`);
+            } finally { document.getElementById('scheduleLoadingOverlay').style.display = 'none'; }
         }
 
         function parseCSV(text) {
-            const result = [];
-            let row = [], inQuotes = false, val = '';
+            const result = []; let row = [], inQuotes = false, val = '';
             for (let i = 0; i < text.length; i++) {
                 const char = text[i];
                 if (char === '"' && text[i+1] === '"') { val += '"'; i++; }
@@ -619,22 +583,28 @@
         }
 
         const getTimeWeight = (timeStr) => {
-            if (timeStr.includes('낮공')) return 1000;
-            if (timeStr.includes('밤공')) return 2000;
+            if (timeStr.includes('낮공')) return 1000; if (timeStr.includes('밤공')) return 2000;
             const match = timeStr.match(/(\d{1,2}):(\d{2})/);
             return match ? parseInt(match[1], 10) * 60 + parseInt(match[2], 10) : 9999;
         };
 
         function sortRecordsChronologically() { appData.records.sort((a, b) => { if (a.date !== b.date) return a.date.localeCompare(b.date); return getTimeWeight(a.time) - getTimeWeight(b.time); }); }
         
-        function saveData() { 
-            recalculateState();
-            localStorage.setItem('parkyeolSheetStorage', JSON.stringify(appData)); 
-            renderAll(); 
+        function saveData() { recalculateState(); localStorage.setItem('parkyeolSheetStorage', JSON.stringify(appData)); renderAll(); }
+
+        function fullReset() { 
+            if(confirm("정말 모두 초기화하시겠습니까?")) { 
+                appData = { cards: [{ id: Date.now(), stamps: 0, isActive: true }], coupons: 0, ostTickets: 0, records: [], baseOtherCoupons: 0 }; 
+                saveData(); alert('초기화 완료'); 
+            } 
         }
 
-        function fullReset() { if(confirm("정말 모두 초기화하시겠습니까?")) { appData = { cards: [{ id: Date.now(), stamps: 0, isActive: true }], coupons: 0, ostTickets: 0, records: [] }; saveData(); alert('초기화 완료'); } }
-        function adjustTicket(type, amount) { if (type === 'coupons') appData.coupons = Math.max(0, appData.coupons + amount); else if (type === 'ostTickets') appData.ostTickets = Math.max(0, appData.ostTickets + amount); saveData(); }
+        function adjustTicket(type, amount) { 
+            if (type === 'coupons') appData.coupons = Math.max(0, appData.coupons + amount); 
+            else if (type === 'ostTickets') appData.ostTickets = Math.max(0, appData.ostTickets + amount); 
+            else if (type === 'otherCoupons') appData.baseOtherCoupons = Math.max(0, (appData.baseOtherCoupons || 0) + amount);
+            saveData(); 
+        }
         
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -644,20 +614,15 @@
             tb.classList.remove('text-slate-600', 'hover:bg-slate-50', 'font-medium'); tb.classList.add('bg-py-500', 'text-white', 'shadow-sm', 'font-bold');
             
             if (tabId === 'calendarSheet') {
-                const t = new Date();
-                let m = t.getMonth();
-                if (t.getFullYear() < 2026 || m < 5) m = 5;
-                else if (t.getFullYear() > 2026 || m > 8) m = 8;
-                currentCalDate = new Date(2026, m, 1);
-                renderCalendar();
+                const t = new Date(); let m = t.getMonth();
+                if (t.getFullYear() < 2026 || m < 5) m = 5; else if (t.getFullYear() > 2026 || m > 8) m = 8;
+                currentCalDate = new Date(2026, m, 1); renderCalendar();
             }
         }
 
         function handleDateChange() {
-            const dateInput = document.getElementById('perfDate').value;
-            const timeSelect = document.getElementById('perfTime');
-            const currentTimeVal = timeSelect.value;
-            timeSelect.innerHTML = '';
+            const dateInput = document.getElementById('perfDate').value, timeSelect = document.getElementById('perfTime');
+            const currentTimeVal = timeSelect.value; timeSelect.innerHTML = '';
             if (!dateInput) { timeSelect.innerHTML = '<option value="">선택</option>'; return; }
             
             const daySchedule = castSchedule[dateInput];
@@ -665,10 +630,7 @@
             
             if (daySchedule) {
                 const availableTimes = Object.keys(daySchedule).sort((a, b) => getTimeWeight(a) - getTimeWeight(b));
-                availableTimes.forEach(t => {
-                    let icon = (t.includes('낮') || getTimeWeight(t) < 1020) ? "🌞" : "🌙";
-                    optionsHtml += `<option value="${t}">${icon} ${t}</option>`;
-                });
+                availableTimes.forEach(t => { let icon = (t.includes('낮') || getTimeWeight(t) < 1020) ? "🌞" : "🌙"; optionsHtml += `<option value="${t}">${icon} ${t}</option>`; });
                 timeSelect.innerHTML = optionsHtml;
                 if (availableTimes.length === 1) timeSelect.value = availableTimes[0];
                 else if (currentTimeVal && Array.from(timeSelect.options).some(opt => opt.value === currentTimeVal)) timeSelect.value = currentTimeVal;
@@ -686,12 +648,7 @@
             document.getElementById('castParkyeol').value = p; document.getElementById('castFumiko').value = f; document.getElementById('castRyuji').value = r;
         }
 
-        function createNewCard() { 
-            appData.cards.forEach(c => c.isActive = false); 
-            appData.cards.push({ id: Date.now(), stamps: 0, isActive: true }); 
-            saveData(); 
-        }
-
+        function createNewCard() { appData.cards.forEach(c => c.isActive = false); appData.cards.push({ id: Date.now(), stamps: 0, isActive: true }); saveData(); }
         function switchCard(id) { appData.cards.forEach(c => c.isActive = (c.id === id)); saveData(); }
         
         function deleteCard(id, e) {
@@ -701,22 +658,24 @@
             
             appData.records = appData.records.filter(r => r.cardId !== id); 
             appData.cards = appData.cards.filter(c => c.id !== id);
-            
-            if (appData.cards.length > 0 && !appData.cards.some(c => c.isActive)) {
-                appData.cards[appData.cards.length - 1].isActive = true;
-            }
+            if (appData.cards.length > 0 && !appData.cards.some(c => c.isActive)) appData.cards[appData.cards.length - 1].isActive = true;
             saveData();
         }
 
-        function toggleCouponCheckbox() { const cb = document.getElementById('useCoupon'); if (cb.checked && appData.coupons <= 0) { alert('할인권이 없습니다.'); cb.checked = false; } }
-        
+        function handleCouponChange(elem) {
+            if (elem.value === '40' && appData.coupons <= 0) {
+                alert('40% 할인권이 부족합니다.'); elem.value = '';
+            } else if (elem.value === 'other' && appData.otherCoupons <= 0) {
+                alert('기타 할인권이 부족합니다.'); elem.value = '';
+            }
+        }
+
         function editRecord(id) {
             const r = appData.records.find(rec => rec.id === id); if (!r) return;
             const groupId = r.visitGroupId || r.id;
             if (appData.records.filter(rec => (rec.visitGroupId || rec.id) === groupId).length > 1) return alert('분할 적립된 기록은 개별 수정이 불가합니다. 삭제 후 다시 등록해주세요.');
             
             document.getElementById('editRecordId').value = r.id; 
-            
             const cardSel = document.getElementById('editCardSelect');
             cardSel.innerHTML = appData.cards.map((c, i) => `<option value="${c.id}">📁 도장판 #${i+1} (현재 ${c.stamps}개)</option>`).join('');
             cardSel.value = r.cardId;
@@ -728,7 +687,10 @@
             if(!Array.from(ts.options).some(opt => opt.value === pureTime)) ts.innerHTML += `<option value="${pureTime}">${pureTime} (수동)</option>`;
             ts.value = pureTime;
             document.getElementById('castParkyeol').value = r.parkyeol; document.getElementById('castFumiko').value = r.fumiko; document.getElementById('castRyuji').value = r.ryuji;
-            document.getElementById('seatInfo').value = (r.seat === '관극 예정') ? '' : r.seat; document.getElementById('stampsEarned').value = r.qty;
+            document.getElementById('seatInfo').value = (r.seat === '관극 예정') ? '' : r.seat; 
+            document.getElementById('stampsEarned').value = r.qty;
+            document.getElementById('couponType').value = r.couponType || (r.useCoupon ? '40' : '');
+
             document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-amber-500"></i> 기록 수정 중...';
             document.getElementById('submitBtn').innerText = '🔄 수정된 정보 저장'; document.getElementById('submitBtn').classList.replace('bg-slate-900', 'bg-amber-600'); document.getElementById('cancelEditBtn').classList.remove('hidden');
         }
@@ -736,12 +698,9 @@
         function cancelEdit() {
             document.getElementById('editRecordId').value = ''; document.getElementById('recordForm').reset();
             document.getElementById('editCardArea').classList.add('hidden');
-            const t = new Date();
-            let defaultDate = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
-            if (defaultDate < '2026-06-10') defaultDate = '2026-06-10';
-            if (defaultDate > '2026-09-06') defaultDate = '2026-09-06';
-            document.getElementById('perfDate').value = defaultDate; 
-            handleDateChange();
+            const t = new Date(); let defaultDate = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+            if (defaultDate < '2026-06-10') defaultDate = '2026-06-10'; if (defaultDate > '2026-09-06') defaultDate = '2026-09-06';
+            document.getElementById('perfDate').value = defaultDate; handleDateChange();
             document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-pen text-py-500"></i> 관극 기록';
             document.getElementById('submitBtn').innerText = '💾 저장 및 적립'; document.getElementById('submitBtn').classList.replace('bg-amber-600', 'bg-slate-900'); document.getElementById('cancelEditBtn').classList.add('hidden');
         }
@@ -749,223 +708,150 @@
         function addOrUpdateRecord(e) {
             e.preventDefault();
             const editId = document.getElementById('editRecordId').value;
-            const date = document.getElementById('perfDate').value;
-            const time = document.getElementById('perfTime').value.replace(' (수동)', '');
-            const parkyeol = document.getElementById('castParkyeol').value;
-            const fumiko = document.getElementById('castFumiko').value;
-            const ryuji = document.getElementById('castRyuji').value;
+            const date = document.getElementById('perfDate').value, time = document.getElementById('perfTime').value.replace(' (수동)', '');
+            const parkyeol = document.getElementById('castParkyeol').value, fumiko = document.getElementById('castFumiko').value, ryuji = document.getElementById('castRyuji').value;
             let seat = document.getElementById('seatInfo').value.toUpperCase().replace(/\s+/g, '');
             
-            if (!seat || seat === '관극예정') seat = '관극 예정'; 
-            else if (!/^[A-L]([1-9]|1[0-9])$/.test(seat)) return alert('유효하지 않은 좌석명입니다. (예: A10)');
+            if (!seat || seat === '관극예정') seat = '관극 예정'; else if (!/^[A-L]([1-9]|1[0-9])$/.test(seat)) return alert('유효하지 않은 좌석명입니다. (예: A10)');
             if(!time) return alert('회차를 선택해주세요.');
 
             const targetQty = parseInt(document.getElementById('stampsEarned').value);
-            const useCoupon = document.getElementById('useCoupon').checked;
+            const couponType = document.getElementById('couponType').value;
 
             if (editId) {
                 const rIndex = appData.records.findIndex(r => String(r.id) === String(editId));
                 if(rIndex > -1) {
                     const r = appData.records[rIndex];
-                    if (!r.useCoupon && useCoupon && appData.coupons <= 0) return alert('할인권이 부족합니다.');
+                    if (r.couponType !== '40' && couponType === '40' && appData.coupons <= 0) return alert('40% 할인권이 부족합니다.');
+                    if (r.couponType !== 'other' && couponType === 'other' && appData.otherCoupons <= 0) return alert('기타 할인권이 부족합니다.');
                     
                     r.cardId = Number(document.getElementById('editCardSelect').value);
                     r.date = date; r.time = time; r.parkyeol = parkyeol; r.fumiko = fumiko; r.ryuji = ryuji; 
-                    r.seat = seat; r.qty = targetQty; r.useCoupon = useCoupon;
+                    r.seat = seat; r.qty = targetQty; r.couponType = couponType; r.useCoupon = (couponType === '40');
                 }
             } else {
-                if (useCoupon && appData.coupons <= 0) return alert('할인권이 부족합니다.');
+                if (couponType === '40' && appData.coupons <= 0) return alert('40% 할인권이 부족합니다.');
+                if (couponType === 'other' && appData.otherCoupons <= 0) return alert('기타 할인권이 부족합니다.');
 
                 const visitGroupId = Date.now();
-                let remainingStamps = targetQty;
-                let firstChunk = true;
-                
+                let remainingStamps = targetQty, firstChunk = true;
                 let activeCard = appData.cards.find(c => c.isActive);
-                if (!activeCard) {
-                    activeCard = { id: Date.now(), stamps: 0, isActive: true };
-                    appData.cards.push(activeCard);
-                }
+                if (!activeCard) { activeCard = { id: Date.now(), stamps: 0, isActive: true }; appData.cards.push(activeCard); }
 
                 while (remainingStamps > 0) {
                     let spaceLeft = 7 - activeCard.stamps;
                     if (spaceLeft === 0) {
-                        activeCard.isActive = false;
-                        activeCard = { id: Date.now() + Math.random(), stamps: 0, isActive: true };
-                        appData.cards.push(activeCard);
-                        spaceLeft = 7;
+                        activeCard.isActive = false; activeCard = { id: Date.now() + Math.random(), stamps: 0, isActive: true }; appData.cards.push(activeCard); spaceLeft = 7;
                     }
                     let stampsToApply = Math.min(remainingStamps, spaceLeft);
-                    
                     activeCard.stamps += stampsToApply;
                     
                     appData.records.push({ 
-                        id: Date.now() + Math.random(), 
-                        visitGroupId, 
-                        cardId: activeCard.id,
-                        date, time, parkyeol, fumiko, ryuji, seat, 
-                        qty: stampsToApply, 
-                        useCoupon: firstChunk ? useCoupon : false 
+                        id: Date.now() + Math.random(), visitGroupId, cardId: activeCard.id, date, time, parkyeol, fumiko, ryuji, seat, qty: stampsToApply, 
+                        couponType: firstChunk ? couponType : '', useCoupon: firstChunk ? (couponType === '40') : false 
                     });
-                    remainingStamps -= stampsToApply;
-                    firstChunk = false;
+                    remainingStamps -= stampsToApply; firstChunk = false;
                 }
             }
-            
-            saveData(); 
-            cancelEdit();
+            saveData(); cancelEdit();
         }
 
-        function changeMonth(delta) {
-            currentCalDate.setMonth(currentCalDate.getMonth() + delta);
-            renderCalendar();
-        }
+        function changeMonth(delta) { currentCalDate.setMonth(currentCalDate.getMonth() + delta); renderCalendar(); }
 
         function showScheduleDetail(date, time) {
-            const cast = castSchedule[date][time];
-            const records = appData.records.filter(r => r.date === date && r.time === time);
-            const evt = eventsByDate[date];
-            
+            const cast = castSchedule[date][time], records = appData.records.filter(r => r.date === date && r.time === time), evt = eventsByDate[date];
             let html = `
                 <div class="mb-4 text-center">
                     <h3 class="text-xl font-bold text-slate-800 tracking-tight">${date} <span class="text-py-500 text-lg">${time}</span></h3>
                     ${evt ? `<div class="inline-block ${eventColorMap[evt] ? eventColorMap[evt].replace('border-y', '') : 'bg-py-100 text-py-800'} text-xs px-2 py-0.5 rounded-full mt-2 font-bold shadow-sm border">${evt}</div>` : ''}
                 </div>
                 <div class="grid grid-cols-3 gap-2 mb-5 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <div class="text-center">
-                        <div class="text-[10px] text-slate-500 font-medium mb-1">박열</div>
-                        <div class="font-bold text-slate-800 text-sm">${cast[0]}</div>
-                    </div>
-                    <div class="text-center border-x border-slate-200">
-                        <div class="text-[10px] text-slate-500 font-medium mb-1">가네코 후미코</div>
-                        <div class="font-bold text-slate-800 text-sm">${cast[1]}</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-[10px] text-slate-500 font-medium mb-1">류지</div>
-                        <div class="font-bold text-slate-800 text-sm">${cast[2]}</div>
-                    </div>
+                    <div class="text-center"><div class="text-[10px] text-slate-500 font-medium mb-1">박열</div><div class="font-bold text-slate-800 text-sm">${cast[0]}</div></div>
+                    <div class="text-center border-x border-slate-200"><div class="text-[10px] text-slate-500 font-medium mb-1">가네코 후미코</div><div class="font-bold text-slate-800 text-sm">${cast[1]}</div></div>
+                    <div class="text-center"><div class="text-[10px] text-slate-500 font-medium mb-1">류지</div><div class="font-bold text-slate-800 text-sm">${cast[2]}</div></div>
                 </div>
             `;
 
             if (records.length > 0) {
                 html += `<h4 class="text-xs font-bold text-py-600 mb-2 border-b border-py-100 pb-1.5 flex items-center gap-1"><i class="fa-solid fa-ticket"></i> 나의 예매/관극 정보</h4>`;
-                records.forEach((r, idx) => {
+                records.forEach(r => {
                     html += `
                         <div class="flex justify-between items-center bg-white p-3 rounded-lg border border-py-200 mb-2 shadow-sm">
-                            <div class="flex items-center gap-2">
-                                <span class="bg-py-100 text-py-800 text-[10px] px-2 py-0.5 rounded font-bold">좌석</span>
-                                <span class="text-sm font-bold text-slate-800">${r.seat}</span>
-                            </div>
+                            <div class="flex items-center gap-2"><span class="bg-py-100 text-py-800 text-[10px] px-2 py-0.5 rounded font-bold">좌석</span><span class="text-sm font-bold text-slate-800">${r.seat}</span></div>
                             <div class="text-[10px]">
-                                ${r.useCoupon ? '<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded font-bold">할인권 적용 O</span>' : '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded font-bold">할인권 미적용</span>'}
+                                ${r.couponType === '40' || r.useCoupon ? '<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded font-bold">40% 할인 O</span>' : r.couponType === 'other' ? '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded font-bold">기타 할인 O</span>' : '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded font-bold">할인권 미사용</span>'}
                             </div>
                         </div>
                     `;
                 });
             } else {
-                html += `
-                <div class="text-center text-slate-400 text-xs py-3 mb-2 bg-slate-50 rounded-lg border border-slate-100">
-                    <i class="fa-solid fa-folder-open mb-1 text-slate-300"></i><br>등록된 관극 기록이 없습니다.
-                </div>`;
+                html += `<div class="text-center text-slate-400 text-xs py-3 mb-2 bg-slate-50 rounded-lg border border-slate-100"><i class="fa-solid fa-folder-open mb-1 text-slate-300"></i><br>등록된 관극 기록이 없습니다.</div>`;
             }
 
-            let cardOptions = appData.cards.map((c, i) => {
-                let isSelected = c.isActive ? 'selected' : '';
-                return `<option value="${c.id}" ${isSelected}>📁 도장판 #${i+1} (현재 ${c.stamps}개 / 최대 7개)</option>`;
-            }).join('');
+            let cardOptions = appData.cards.map((c, i) => `<option value="${c.id}" ${c.isActive ? 'selected' : ''}>📁 도장판 #${i+1} (현재 ${c.stamps}개 / 최대 7개)</option>`).join('');
 
             html += `
                 <div class="mt-4 border-t border-slate-200 pt-4">
                     <h4 class="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-bolt text-py-500"></i> 빠른 관극 기록 추가</h4>
                     <div class="space-y-2">
-                        <select id="quickCardId" class="w-full border border-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 bg-slate-50 font-medium">
-                            ${cardOptions}
-                        </select>
+                        <select id="quickCardId" class="w-full border border-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 bg-slate-50 font-medium">${cardOptions}</select>
                         <input type="text" id="quickSeat" placeholder="좌석 정보 (예: A10, 미입력 시 '관극 예정')" class="w-full border border-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 uppercase">
-                        
                         <div class="flex gap-2">
-                            <select id="quickStamps" class="flex-1 border border-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500">
-                                <option value="1">도장 1개 적립</option>
-                                <option value="2">도장 2개 적립</option>
-                                <option value="3">도장 3개 적립</option>
+                            <select id="quickStamps" class="flex-1 border border-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500"><option value="1">도장 1개 적립</option><option value="2">도장 2개 적립</option><option value="3">도장 3개 적립</option></select>
+                            <select id="quickCouponType" onchange="handleCouponChange(this)" class="flex-1 border border-slate-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 bg-slate-50">
+                                <option value="">할인 미사용</option>
+                                <option value="40">40% 할인권</option>
+                                <option value="other">기타 할인권</option>
                             </select>
-                            <label class="flex items-center gap-1.5 bg-slate-50 px-2 rounded-lg border border-slate-200 cursor-pointer">
-                                <input type="checkbox" id="quickCoupon" class="w-3.5 h-3.5 text-py-500 rounded">
-                                <span class="text-[10px] font-semibold text-slate-700 whitespace-nowrap">할인권 사용</span>
-                            </label>
                         </div>
-                        
-                        <button onclick="quickAddRecord('${date}', '${time}', '${cast[0]}', '${cast[1]}', '${cast[2]}')" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold hover:bg-slate-900 transition mt-1">
-                            기록 저장하고 타임라인 보기
-                        </button>
+                        <button onclick="quickAddRecord('${date}', '${time}', '${cast[0]}', '${cast[1]}', '${cast[2]}')" class="w-full bg-slate-800 text-white py-2 rounded-lg text-xs font-bold hover:bg-slate-900 transition mt-1">기록 저장하고 타임라인 보기</button>
                     </div>
                 </div>
             `;
-
-            document.getElementById('scheduleDetailContent').innerHTML = html;
-            document.getElementById('scheduleDetailModal').classList.add('active');
+            document.getElementById('scheduleDetailContent').innerHTML = html; document.getElementById('scheduleDetailModal').classList.add('active');
         }
 
-        function closeScheduleDetailModal() {
-            document.getElementById('scheduleDetailModal').classList.remove('active');
-        }
+        function closeScheduleDetailModal() { document.getElementById('scheduleDetailModal').classList.remove('active'); }
 
         function quickAddRecord(date, time, parkyeol, fumiko, ryuji) {
             let seat = document.getElementById('quickSeat').value.toUpperCase().replace(/\s+/g, '');
-            if (!seat) seat = '관극 예정'; 
-            else if (!/^[A-L]([1-9]|1[0-9])$/.test(seat)) return alert('유효하지 않은 좌석명입니다. (예: A10)');
+            if (!seat) seat = '관극 예정'; else if (!/^[A-L]([1-9]|1[0-9])$/.test(seat)) return alert('유효하지 않은 좌석명입니다. (예: A10)');
             
             const qty = parseInt(document.getElementById('quickStamps').value);
-            const useCoupon = document.getElementById('quickCoupon').checked;
+            const couponType = document.getElementById('quickCouponType').value;
             
             const selectedCardId = Number(document.getElementById('quickCardId').value);
             let activeCard = appData.cards.find(c => c.id === selectedCardId);
-            
             if (!activeCard) return alert('도장판을 선택해주세요. (생성된 도장판이 없다면 관극 기록 탭에서 추가해주세요)');
             
             appData.cards.forEach(c => c.isActive = (c.id === selectedCardId));
 
-            if (useCoupon && appData.coupons <= 0) return alert('할인권이 부족합니다.');
+            if (couponType === '40' && appData.coupons <= 0) return alert('40% 할인권이 부족합니다.');
+            if (couponType === 'other' && appData.otherCoupons <= 0) return alert('기타 할인권이 부족합니다.');
 
             const visitGroupId = Date.now();
-            let remainingStamps = qty;
-            let firstChunk = true;
+            let remainingStamps = qty, firstChunk = true;
             
             while (remainingStamps > 0) {
                 let spaceLeft = 7 - activeCard.stamps;
-                if (spaceLeft === 0) {
-                    activeCard.isActive = false;
-                    activeCard = { id: Date.now() + Math.random(), stamps: 0, isActive: true };
-                    appData.cards.push(activeCard);
-                    spaceLeft = 7;
-                }
+                if (spaceLeft === 0) { activeCard.isActive = false; activeCard = { id: Date.now() + Math.random(), stamps: 0, isActive: true }; appData.cards.push(activeCard); spaceLeft = 7; }
                 let stampsToApply = Math.min(remainingStamps, spaceLeft);
-                
                 activeCard.stamps += stampsToApply;
                 
                 appData.records.push({ 
-                    id: Date.now() + Math.random(), 
-                    visitGroupId, 
-                    cardId: activeCard.id, 
-                    date, time, parkyeol, fumiko, ryuji, seat, 
-                    qty: stampsToApply, 
-                    useCoupon: firstChunk ? useCoupon : false 
+                    id: Date.now() + Math.random(), visitGroupId, cardId: activeCard.id, date, time, parkyeol, fumiko, ryuji, seat, qty: stampsToApply, 
+                    couponType: firstChunk ? couponType : '', useCoupon: firstChunk ? (couponType === '40') : false 
                 });
-                remainingStamps -= stampsToApply;
-                firstChunk = false;
+                remainingStamps -= stampsToApply; firstChunk = false;
             }
-            
-            saveData();
-            closeScheduleDetailModal();
-            switchTab('logSheet');
+            saveData(); closeScheduleDetailModal(); switchTab('logSheet');
         }
 
         function deleteRecord(id) {
             const r = appData.records.find(rec => rec.id === id); if (!r) return;
             const groupId = r.visitGroupId || r.id;
             if (!confirm('관극 일지를 삭제하시겠습니까?')) return;
-            
-            appData.records = appData.records.filter(rec => (rec.visitGroupId || rec.id) !== groupId); 
-            saveData(); 
+            appData.records = appData.records.filter(rec => (rec.visitGroupId || rec.id) !== groupId); saveData(); 
         }
 
         function generateHeatmap() {
@@ -979,149 +865,79 @@
             const eb = (n) => Array(n).fill(`<div class="w-[10px] h-[10px] sm:w-[13px] sm:h-[13px] md:w-[18px] md:h-[18px] lg:w-[22px] lg:h-[22px] bg-transparent flex-shrink-0"></div>`).join('');
             
             const wrap = (name, inn) => `<div class="flex items-center justify-center w-full relative py-[1px]">
-                <span class="absolute -left-5 sm:-left-6 md:-left-7 lg:-left-8 text-[8px] md:text-[10px] text-slate-400 font-bold w-4 text-right">${name}</span>
-                <div class="flex gap-[1px] md:gap-[2px] lg:gap-[3px] justify-center">${inn}</div>
-                <span class="absolute -right-5 sm:-right-6 md:-right-7 lg:-right-8 text-[8px] md:text-[10px] text-slate-400 font-bold w-4 text-left">${name}</span>
+                <span class="absolute -left-5 sm:-left-6 md:-left-7 lg:-left-8 text-[8px] md:text-[10px] text-slate-400 font-bold w-4 text-right">${name}</span><div class="flex gap-[1px] md:gap-[2px] lg:gap-[3px] justify-center">${inn}</div><span class="absolute -right-5 sm:-right-6 md:-right-7 lg:-right-8 text-[8px] md:text-[10px] text-slate-400 font-bold w-4 text-left">${name}</span>
             </div>`;
 
-            let h = '';
-            const rng = (r, m) => { let ht=''; for(let s=1;s<=m;s++) ht+=b(`${r}${s}`,s); return ht; };
+            let h = ''; const rng = (r, m) => { let ht=''; for(let s=1;s<=m;s++) ht+=b(`${r}${s}`,s); return ht; };
             h += wrap('A', rng('A',19)) + wrap('B', rng('B',19)) + wrap('C', rng('C',18)) + wrap('D', rng('D',19)) + `<div class="w-full h-3 md:h-6"></div>`;
-            h += wrap('E', eb(2)+rng('E',7).replace(/E/g,'E')+eb(1)+rng('E',17).substring(rng('E',7).length)); 
-            h += wrap('F', eb(2)+rng('F',7).replace(/F/g,'F')+eb(1)+rng('F',17).substring(rng('F',7).length)); 
-            h += wrap('G', eb(2)+rng('G',7).replace(/G/g,'G')+eb(1)+rng('G',17).substring(rng('G',7).length));
-
+            h += wrap('E', eb(2)+rng('E',7).replace(/E/g,'E')+eb(1)+rng('E',17).substring(rng('E',7).length)); h += wrap('F', eb(2)+rng('F',7).replace(/F/g,'F')+eb(1)+rng('F',17).substring(rng('F',7).length)); h += wrap('G', eb(2)+rng('G',7).replace(/G/g,'G')+eb(1)+rng('G',17).substring(rng('G',7).length));
             const rhij = (r) => { let ht=''; for(let s=1;s<=9;s++) ht+=b(`${r}${s}`,s); ht+=eb(1); for(let s=10;s<=19;s++) ht+=b(`${r}${s}`,s); return ht; };
             h += wrap('H', rhij('H')) + wrap('I', rhij('I')) + wrap('J', rhij('J'));
-            
             let hk=''; for(let s=1;s<=9;s++) hk+=b(`K${s}`,s); hk+=eb(1); for(let s=10;s<=18;s++) hk+=b(`K${s}`,s); hk+=eb(1); h += wrap('K', hk);
             let hl=eb(2); for(let s=1;s<=7;s++) hl+=b(`L${s}`,s); hl+=eb(11); h += wrap('L', hl);
-
             document.getElementById('seating-grid').innerHTML = h;
         }
 
         function renderCalendar() {
-            const year = currentCalDate.getFullYear();
-            const month = currentCalDate.getMonth();
+            const year = currentCalDate.getFullYear(), month = currentCalDate.getMonth();
             document.getElementById('calendarMonthLabel').innerText = `${year}년 ${month + 1}월`;
+            const firstDayStr = new Date(year, month, 1).getDay(), emptyCells = firstDayStr === 0 ? 6 : firstDayStr - 1, daysInMonth = new Date(year, month + 1, 0).getDate();
 
-            const firstDayStr = new Date(year, month, 1).getDay();
-            const emptyCells = firstDayStr === 0 ? 6 : firstDayStr - 1;
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            let html = `<div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">월</div><div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">화</div><div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">수</div><div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">목</div><div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">금</div><div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-blue-500 border-b border-slate-200">토</div><div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-rose-500 border-b border-slate-200">일</div>`;
+            for(let i=0; i<emptyCells; i++) html += `<div class="bg-white min-h-[70px] md:min-h-[120px]"></div>`;
 
-            let html = `
-                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">월</div>
-                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">화</div>
-                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">수</div>
-                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">목</div>
-                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 border-b border-slate-200">금</div>
-                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-blue-500 border-b border-slate-200">토</div>
-                <div class="bg-slate-50 text-center py-1 md:py-2 text-[10px] md:text-xs font-bold text-rose-500 border-b border-slate-200">일</div>
-            `;
-
-            for(let i=0; i<emptyCells; i++) {
-                html += `<div class="bg-white min-h-[70px] md:min-h-[120px]"></div>`;
-            }
-
-            let spans = [];
-            let currentSpan = [];
+            let spans = [], currentSpan = [];
             for (let d = 1; d <= daysInMonth; d++) {
-                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const ev = eventsByDate[dateStr];
-                
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`, ev = eventsByDate[dateStr];
                 if (ev) {
-                    if (currentSpan.length === 0 || currentSpan[0].ev === ev) {
-                        currentSpan.push({d, ev, dateStr});
-                    } else {
-                        spans.push(currentSpan);
-                        currentSpan = [{d, ev, dateStr}];
-                    }
-                    if (!eventColorMap[ev]) {
-                        eventColorMap[ev] = ribbonColors[colorIndex % ribbonColors.length];
-                        colorIndex++;
-                    }
-                } else {
-                    if (currentSpan.length > 0) spans.push(currentSpan);
-                    currentSpan = [];
-                }
+                    if (currentSpan.length === 0 || currentSpan[0].ev === ev) currentSpan.push({d, ev, dateStr}); else { spans.push(currentSpan); currentSpan = [{d, ev, dateStr}]; }
+                    if (!eventColorMap[ev]) { eventColorMap[ev] = ribbonColors[colorIndex % ribbonColors.length]; colorIndex++; }
+                } else { if (currentSpan.length > 0) spans.push(currentSpan); currentSpan = []; }
             }
             if (currentSpan.length > 0) spans.push(currentSpan);
 
-            const centerDates = new Set();
-            spans.forEach(span => {
-                const midIndex = Math.floor((span.length - 1) / 2);
-                centerDates.add(span[midIndex].dateStr);
-            });
-
+            const centerDates = new Set(); spans.forEach(span => { const midIndex = Math.floor((span.length - 1) / 2); centerDates.add(span[midIndex].dateStr); });
             const realToday = new Date();
 
             for(let d=1; d<=daysInMonth; d++) {
                 const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`, dayOfWeek = (emptyCells + d - 1) % 7;
                 let dayColor = ''; if (dayOfWeek === 5) dayColor = 'text-blue-500'; else if (dayOfWeek === 6) dayColor = 'text-rose-500'; 
-
                 const isTodayActive = (realToday.getMonth() === month && realToday.getDate() === d);
                 
-                let dayNumHtml = `<div class="h-5 md:h-6 mt-1 ml-1 md:ml-1.5 flex items-center">` +
-                    (isTodayActive 
-                    ? `<span class="bg-slate-900 text-white text-[9px] md:text-[11px] font-bold rounded-full w-4 h-4 md:w-5 md:h-5 flex items-center justify-center shadow-sm flex-shrink-0">${d}</span>`
-                    : `<span class="text-[9px] md:text-[11px] font-semibold text-slate-700 px-1 ${dayColor}">${d}</span>`) +
-                    `</div>`;
-
+                let dayNumHtml = `<div class="h-5 md:h-6 mt-1 ml-1 md:ml-1.5 flex items-center">` + (isTodayActive ? `<span class="bg-slate-900 text-white text-[9px] md:text-[11px] font-bold rounded-full w-4 h-4 md:w-5 md:h-5 flex items-center justify-center shadow-sm flex-shrink-0">${d}</span>` : `<span class="text-[9px] md:text-[11px] font-semibold text-slate-700 px-1 ${dayColor}">${d}</span>`) + `</div>`;
                 let cellZ = (eventsByDate[dateStr] && centerDates.has(dateStr)) ? 'z-20' : 'z-0';
-
-                let dayHtml = `<div class="bg-white min-h-[70px] md:min-h-[120px] pb-1 md:pb-2 flex flex-col relative group min-w-0 ${cellZ}">
-                    ${dayNumHtml}`;
+                let dayHtml = `<div class="bg-white min-h-[70px] md:min-h-[120px] pb-1 md:pb-2 flex flex-col relative group min-w-0 ${cellZ}">${dayNumHtml}`;
 
                 if (eventsByDate[dateStr]) {
                     const eventText = eventsByDate[dateStr], pD = new Date(year, month, d-1), nD = new Date(year, month, d+1);
                     const prevStr = `${pD.getFullYear()}-${String(pD.getMonth()+1).padStart(2,'0')}-${String(pD.getDate()).padStart(2,'0')}`, nextStr = `${nD.getFullYear()}-${String(nD.getMonth()+1).padStart(2,'0')}-${String(nD.getDate()).padStart(2,'0')}`;
-                    const isFirstDayOfWeek = dayOfWeek === 0, isLastDayOfWeek = dayOfWeek === 6;
-                    const connLeft = eventsByDate[prevStr] === eventText && !isFirstDayOfWeek, connRight = eventsByDate[nextStr] === eventText && !isLastDayOfWeek; 
+                    const isFirstDayOfWeek = dayOfWeek === 0, isLastDayOfWeek = dayOfWeek === 6, connLeft = eventsByDate[prevStr] === eventText && !isFirstDayOfWeek, connRight = eventsByDate[nextStr] === eventText && !isLastDayOfWeek; 
                     
                     let rbCls = `${eventColorMap[eventText]} py-0.5 md:py-1 z-10 border-y relative h-[16px] md:h-[22px] flex items-center justify-center `;
-                    if (connLeft && connRight) rbCls += "-ml-[1px] -mr-[1px] w-[calc(100%+2px)] border-x-0 rounded-none"; 
-                    else if (connLeft) rbCls += "-ml-[1px] mr-0.5 rounded-r rounded-l-none border-l-0 w-[calc(100%+1px)]";
-                    else if (connRight) rbCls += "ml-0.5 -mr-[1px] rounded-l rounded-r-none border-r-0 w-[calc(100%+1px)]";
-                    else rbCls += "mx-1 rounded border w-[calc(100%-8px)]";
-
+                    if (connLeft && connRight) rbCls += "-ml-[1px] -mr-[1px] w-[calc(100%+2px)] border-x-0 rounded-none"; else if (connLeft) rbCls += "-ml-[1px] mr-0.5 rounded-r rounded-l-none border-l-0 w-[calc(100%+1px)]"; else if (connRight) rbCls += "ml-0.5 -mr-[1px] rounded-l rounded-r-none border-r-0 w-[calc(100%+1px)]"; else rbCls += "mx-1 rounded border w-[calc(100%-8px)]";
                     const displayTxt = centerDates.has(dateStr) ? `<span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-max px-1 text-[7.5px] md:text-[10px] tracking-tight font-bold whitespace-nowrap z-30 pointer-events-none text-slate-800 drop-shadow-sm">${eventText}</span>` : '';
                     dayHtml += `<div class="w-full relative mt-1">${displayTxt}<div class="${rbCls}" title="${eventText}"></div></div>`;
-                } else {
-                    dayHtml += `<div class="h-[18px] md:h-[26px] mt-1"></div>`;
-                }
+                } else { dayHtml += `<div class="h-[18px] md:h-[26px] mt-1"></div>`; }
 
                 if (castSchedule[dateStr]) {
                     let times = Object.keys(castSchedule[dateStr]).sort((a,b) => getTimeWeight(a) - getTimeWeight(b));
                     dayHtml += `<div class="mt-0.5 md:mt-1 flex flex-col gap-0.5 md:gap-1 px-0.5 md:px-1 w-full box-border overflow-hidden">`;
                     times.forEach(t => {
-                        const cast = castSchedule[dateStr][t];
-                        let isMatch = true;
-                        if (calFilterP && cast[0] !== calFilterP) isMatch = false;
-                        if (calFilterF && cast[1] !== calFilterF) isMatch = false;
-                        if (calFilterR && cast[2] !== calFilterR) isMatch = false;
-
+                        const cast = castSchedule[dateStr][t]; let isMatch = true;
+                        if (calFilterP && cast[0] !== calFilterP) isMatch = false; if (calFilterF && cast[1] !== calFilterF) isMatch = false; if (calFilterR && cast[2] !== calFilterR) isMatch = false;
                         const isBooked = appData.records.some(r => r.date === dateStr && r.time === t);
                         let btnClass = isBooked ? "bg-py-600 text-white font-bold shadow-md ring-1 ring-py-700 hover:bg-py-700" : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 font-medium";
-                        
                         if (!isMatch) btnClass += " opacity-25 grayscale";
-
                         let icon = (t.includes('낮') || getTimeWeight(t) < 1020) ? "🌞" : "🌙";
-                        
-                        dayHtml += `<button onclick="showScheduleDetail('${dateStr}', '${t}')" class="text-[8.5px] md:text-[10px] w-full px-0 py-1 rounded transition ${btnClass} flex flex-row items-center justify-center gap-[1.5px] leading-none whitespace-nowrap">
-                            <span class="flex-shrink-0">${icon}</span><span class="flex-shrink-0 mt-[1px] tracking-tighter">${t}</span>
-                        </button>`;
+                        dayHtml += `<button onclick="showScheduleDetail('${dateStr}', '${t}')" class="text-[8.5px] md:text-[10px] w-full px-0 py-1 rounded transition ${btnClass} flex flex-row items-center justify-center gap-[1.5px] leading-none whitespace-nowrap"><span class="flex-shrink-0">${icon}</span><span class="flex-shrink-0 mt-[1px] tracking-tighter">${t}</span></button>`;
                     });
                     dayHtml += `</div>`;
                 }
-                dayHtml += `</div>`;
-                html += dayHtml;
+                dayHtml += `</div>`; html += dayHtml;
             }
             
-            const totalCells = emptyCells + daysInMonth;
-            const remaining = 7 - (totalCells % 7);
-            if (remaining < 7) {
-                for(let i=0; i<remaining; i++) html += `<div class="bg-white min-h-[70px] md:min-h-[120px]"></div>`;
-            }
+            const totalCells = emptyCells + daysInMonth, remaining = 7 - (totalCells % 7);
+            if (remaining < 7) { for(let i=0; i<remaining; i++) html += `<div class="bg-white min-h-[70px] md:min-h-[120px]"></div>`; }
             document.getElementById('calendarGrid').innerHTML = html;
         }
 
@@ -1169,12 +985,7 @@
             const previewImg = document.getElementById('previewImage');
             const loadingUI = document.getElementById('previewLoading');
             const downloadBtn = document.getElementById('finalDownloadBtn');
-            
-            modal.classList.add('active');
-            previewImg.classList.add('hidden');
-            loadingUI.classList.remove('hidden');
-            downloadBtn.disabled = true;
-
+            modal.classList.add('active'); previewImg.classList.add('hidden'); loadingUI.classList.remove('hidden'); downloadBtn.disabled = true;
             await renderCanvasForPreview();
         }
 
@@ -1182,129 +993,62 @@
 
         function downloadRenderedImage() {
             if (!generatedImageUrl) return;
-            const link = document.createElement('a');
-            link.download = `박열_정산_${new Date().toISOString().slice(0,10)}.png`;
-            link.href = generatedImageUrl;
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            const link = document.createElement('a'); link.download = `박열_정산_${new Date().toISOString().slice(0,10)}.png`;
+            link.href = generatedImageUrl; document.body.appendChild(link); link.click(); document.body.removeChild(link);
             closePreviewModal();
         }
 
         async function renderCanvasForPreview() {
-            const container = document.getElementById('export-container');
-            container.style.height = 'auto';
-            
+            const container = document.getElementById('export-container'); container.style.height = 'auto';
             const buildActorCard = (role, name, rot, zIndex) => {
-                const imgPath = imagePaths.actors[name];
-                const safeImgPath = encodeURI(imgPath);
-
-                let att = 0, tot = 0;
+                const safeImgPath = encodeURI(imagePaths.actors[name]); let att = 0, tot = 0;
                 if(role === 'parkyeol') { att = globalStats.castP[name]||0; tot = globalStats.totalP[name]||0; }
                 if(role === 'fumiko') { att = globalStats.castF[name]||0; tot = globalStats.totalF[name]||0; }
                 if(role === 'ryuji') { att = globalStats.castR[name]||0; tot = globalStats.totalR[name]||0; }
                 const dTot = tot > 0 ? tot : att; 
-
-                return `
-                    <div style="position: relative; z-index: ${zIndex}; transform: rotate(${rot}deg); background: #eeebe5; padding: 5px; border-radius: 2px; box-shadow: 3px 5px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; border: 1px solid #c8c0b5;">
-                        <div style="width: 145px; height: 200px; overflow: hidden; position: relative; border: 1px solid #9c9489;">
-                            <img src="${safeImgPath}" style="width: 100%; height: 100%; object-fit: cover; filter: sepia(40%) grayscale(60%) contrast(110%) brightness(0.9);" onerror="this.style.display='none'">
-                            
-                            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 35%, rgba(0,0,0,0) 75%); padding: 50px 5px 8px 5px; display: flex; flex-direction: column; align-items: center; line-height: 1.2;">
-                                <span style="font-family: 'Baekbeom', sans-serif; font-size: 16px; font-weight: bold; color: #ffffff; letter-spacing: 1.5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${name}</span>
-                                <span style="font-family: 'Baekbeom', sans-serif; font-size: 12px; font-weight: bold; color: #ffcaca; margin-top: 3px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${att} / ${dTot}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                return `<div style="position: relative; z-index: ${zIndex}; transform: rotate(${rot}deg); background: #eeebe5; padding: 5px; border-radius: 2px; box-shadow: 3px 5px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; border: 1px solid #c8c0b5;"><div style="width: 145px; height: 200px; overflow: hidden; position: relative; border: 1px solid #9c9489;"><img src="${safeImgPath}" style="width: 100%; height: 100%; object-fit: cover; filter: sepia(40%) grayscale(60%) contrast(110%) brightness(0.9);" onerror="this.style.display='none'"><div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 35%, rgba(0,0,0,0) 75%); padding: 50px 5px 8px 5px; display: flex; flex-direction: column; align-items: center; line-height: 1.2;"><span style="font-family: 'Baekbeom', sans-serif; font-size: 16px; font-weight: bold; color: #ffffff; letter-spacing: 1.5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${name}</span><span style="font-family: 'Baekbeom', sans-serif; font-size: 12px; font-weight: bold; color: #ffcaca; margin-top: 3px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${att} / ${dTot}</span></div></div></div>`;
             };
 
-            const safePoster = encodeURI(imagePaths.poster);
-            const safeTex2 = encodeURI(imagePaths.tex2);
-            const safeTex3 = encodeURI(imagePaths.tex3);
-            const safeTex4 = encodeURI(imagePaths.tex4);
-            const safeCuffs = encodeURI(imagePaths.cuffs);
-            const safePyLogo = encodeURI(imagePaths.pyLogo);
+            const safePoster = encodeURI(imagePaths.poster), safeTex2 = encodeURI(imagePaths.tex2), safeTex3 = encodeURI(imagePaths.tex3), safeTex4 = encodeURI(imagePaths.tex4), safeCuffs = encodeURI(imagePaths.cuffs), safePyLogo = encodeURI(imagePaths.pyLogo);
 
             container.innerHTML = `
-                <div style="position: absolute; inset: 0; background-color: #1a1716;"></div>
-                <div style="position: absolute; inset: 0; background-image: url('${safePoster}'); background-size: cover; background-position: center; opacity: 0.3; filter: grayscale(50%); z-index: 1;"></div>
-                <div style="position: absolute; inset: 0; background-image: url('${safeTex4}'); background-size: cover; background-position: center; opacity: 0.2; z-index: 2;"></div>
-                
+                <div style="position: absolute; inset: 0; background-color: #1a1716;"></div><div style="position: absolute; inset: 0; background-image: url('${safePoster}'); background-size: cover; background-position: center; opacity: 0.3; filter: grayscale(50%); z-index: 1;"></div><div style="position: absolute; inset: 0; background-image: url('${safeTex4}'); background-size: cover; background-position: center; opacity: 0.2; z-index: 2;"></div>
                 <div style="position: relative; z-index: 10; display: flex; align-items: center; padding: 50px; gap: 40px; box-sizing: border-box; width: 100%;">
-                    
-                    <div style="flex: 1.2; position: relative;">
-                        <div style="position: absolute; top: -20px; left: -20px; right: -20px; bottom: -20px; background-image: url('${safeTex3}'); background-size: cover; opacity: 0.6; transform: rotate(-1.5deg); box-shadow: 2px 4px 20px rgba(0,0,0,0.7); filter: sepia(30%) grayscale(50%); z-index: 1;"></div>
-
+                    <div style="flex: 1.2; position: relative;"><div style="position: absolute; top: -20px; left: -20px; right: -20px; bottom: -20px; background-image: url('${safeTex3}'); background-size: cover; opacity: 0.6; transform: rotate(-1.5deg); box-shadow: 2px 4px 20px rgba(0,0,0,0.7); filter: sepia(30%) grayscale(50%); z-index: 1;"></div>
                         <div style="position: relative; z-index: 10; display: flex; flex-direction: column; gap: 20px; padding: 25px;">
-                            <div style="display: flex; gap: 20px; justify-content: center;">
-                                ${buildActorCard('parkyeol', '손유동', -2, 12)}
-                                ${buildActorCard('parkyeol', '현석준', 1, 11)}
-                                ${buildActorCard('parkyeol', '백기범', -1, 13)}
-                            </div>
-                            <div style="display: flex; gap: 20px; justify-content: center;">
-                                ${buildActorCard('fumiko', '최수진', 3, 15)}
-                                ${buildActorCard('fumiko', '허윤슬', -2, 14)}
-                                ${buildActorCard('fumiko', '임예진', 1, 16)}
-                            </div>
-                            <div style="display: flex; gap: 20px; justify-content: center;">
-                                ${buildActorCard('ryuji', '박영수', -1, 11)}
-                                ${buildActorCard('ryuji', '장민수', 2, 12)}
-                                ${buildActorCard('ryuji', '임별', -2, 10)}
-                            </div>
+                            <div style="display: flex; gap: 20px; justify-content: center;">${buildActorCard('parkyeol', '손유동', -2, 12)} ${buildActorCard('parkyeol', '현석준', 1, 11)} ${buildActorCard('parkyeol', '백기범', -1, 13)}</div>
+                            <div style="display: flex; gap: 20px; justify-content: center;">${buildActorCard('fumiko', '최수진', 3, 15)} ${buildActorCard('fumiko', '허윤슬', -2, 14)} ${buildActorCard('fumiko', '임예진', 1, 16)}</div>
+                            <div style="display: flex; gap: 20px; justify-content: center;">${buildActorCard('ryuji', '박영수', -1, 11)} ${buildActorCard('ryuji', '장민수', 2, 12)} ${buildActorCard('ryuji', '임별', -2, 10)}</div>
                         </div>
                     </div>
-
                     <div style="flex: 0.9; display: flex; flex-direction: column; position: relative; z-index: 20;">
                         <div style="background-color: #eee9e0; border-radius: 2px; padding: 35px 25px; box-shadow: inset 0 0 60px rgba(139, 115, 85, 0.4), 8px 12px 30px rgba(0,0,0,0.8); position: relative; overflow: hidden; flex-grow: 1; display: flex; flex-direction: column; border: 1px solid #c2b5a3; transform: rotate(1deg);">
-                            
                             <div style="position: absolute; inset: 0; background-image: url('${safeTex2}'); background-size: cover; opacity: 0.15; pointer-events: none; z-index: 0;"></div>
-
-                            <!-- 박열 로고 이미지 크기를 90px로 키웠습니다 -->
-                            <div style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 15px; margin-bottom: 25px;">
-                                <img src="${safePyLogo}" style="height: 90px; object-fit: contain; filter: grayscale(100%) contrast(200%) brightness(0.2); opacity: 0.85;" alt="박열">
-                            </div>
-
-                            <div style="position: relative; z-index: 1; text-align: center; font-size: 22px; color: #2c2825; margin-bottom: 25px;">
-                                총 <span style="color: #7a2828; font-weight: bold; font-size: 40px; margin: 0 6px; border-bottom: 2px solid #7a2828;">${globalStats.totalVisits}</span> 회
-                            </div>
-
+                            <div style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 15px; margin-bottom: 25px;"><img src="${safePyLogo}" style="height: 90px; object-fit: contain; filter: grayscale(100%) contrast(200%) brightness(0.2); opacity: 0.85;" alt="박열"></div>
+                            <div style="position: relative; z-index: 1; text-align: center; font-size: 22px; color: #2c2825; margin-bottom: 25px;">총 <span style="color: #7a2828; font-weight: bold; font-size: 40px; margin: 0 6px; border-bottom: 2px solid #7a2828;">${globalStats.totalVisits}</span> 회</div>
                             <div id="exportSeatingGrid" style="display:flex; flex-direction:column; gap: 5px; width: 100%; align-items: center; justify-content: center; position: relative; z-index: 1;"></div>
-                            
                             <div style="position: relative; z-index: 1; display: flex; justify-content: center; gap: 12px; margin-top: 35px; font-size: 14px; color: #5a4b40; font-weight: bold;">
-                                <div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background: rgba(250,245,235,0.9); border:1px solid #a39b8d; margin-right: 5px;"></div><span style="padding-bottom: 3px;">0</span></div>
-                                <div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#fecaca; border:1px solid #f87171; margin-right: 5px;"></div><span style="padding-bottom: 3px;">1</span></div>
-                                <div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#fef08a; border:1px solid #facc15; margin-right: 5px;"></div><span style="padding-bottom: 3px;">2</span></div>
-                                <div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#bbf7d0; border:1px solid #4ade80; margin-right: 5px;"></div><span style="padding-bottom: 3px;">3</span></div>
-                                <div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#bfdbfe; border:1px solid #60a5fa; margin-right: 5px;"></div><span style="padding-bottom: 3px;">4</span></div>
-                                <div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#7a2828; border:1px solid #5a1919; margin-right: 5px;"></div><span style="padding-bottom: 3px;">5+</span></div>
+                                <div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background: rgba(250,245,235,0.9); border:1px solid #a39b8d; margin-right: 5px;"></div><span style="padding-bottom: 3px;">0</span></div><div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#fecaca; border:1px solid #f87171; margin-right: 5px;"></div><span style="padding-bottom: 3px;">1</span></div><div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#fef08a; border:1px solid #facc15; margin-right: 5px;"></div><span style="padding-bottom: 3px;">2</span></div><div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#bbf7d0; border:1px solid #4ade80; margin-right: 5px;"></div><span style="padding-bottom: 3px;">3</span></div><div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#bfdbfe; border:1px solid #60a5fa; margin-right: 5px;"></div><span style="padding-bottom: 3px;">4</span></div><div style="display: flex; align-items: center;"><div style="width:13px; height:13px; background:#7a2828; border:1px solid #5a1919; margin-right: 5px;"></div><span style="padding-bottom: 3px;">5+</span></div>
                             </div>
                         </div>
-
                         <img src="${safeCuffs}" style="position: absolute; bottom: -40px; right: -40px; width: 300px; mix-blend-mode: screen; opacity: 0.85; transform: rotate(-25deg); z-index: 30;" alt="수갑">
                     </div>
                 </div>
             `;
-
             document.getElementById('exportSeatingGrid').innerHTML = getInlineStyleHeatmapHTML();
-
             await new Promise(r => setTimeout(r, 800));
-
             try {
                 const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#1a1a1a', logging: false });
                 generatedImageUrl = canvas.toDataURL('image/png');
-                document.getElementById('previewLoading').classList.add('hidden');
-                document.getElementById('previewImage').src = generatedImageUrl;
-                document.getElementById('previewImage').classList.remove('hidden');
-                document.getElementById('finalDownloadBtn').disabled = false;
-            } catch (error) {
-                console.error(error); closePreviewModal(); alert('이미지 생성 중 오류가 발생했습니다.');
-            }
+                document.getElementById('previewLoading').classList.add('hidden'); document.getElementById('previewImage').src = generatedImageUrl;
+                document.getElementById('previewImage').classList.remove('hidden'); document.getElementById('finalDownloadBtn').disabled = false;
+            } catch (error) { console.error(error); closePreviewModal(); alert('이미지 생성 중 오류가 발생했습니다.'); }
         }
 
         function getInlineStyleHeatmapHTML() {
             const seatCounts = {}, uniqueVisits = [], seenGroups = new Set();
             appData.records.forEach(r => { const gid = r.visitGroupId || r.id; if(!seenGroups.has(gid)) { seenGroups.add(gid); uniqueVisits.push(r); } });
             uniqueVisits.forEach(r => seatCounts[r.seat] = (seatCounts[r.seat] || 0) + 1);
-
             const getStyle = (c) => {
                 if (c === 0) return 'background: rgba(250,245,235,0.95); border: 1px solid #a39b8d; color: #736b60;';
                 if (c === 1) return 'background: rgba(254,202,202,0.95); border: 1px solid #f87171; color: #7f1d1d;';
@@ -1313,50 +1057,23 @@
                 if (c === 4) return 'background: rgba(191,219,254,0.95); border: 1px solid #60a5fa; color: #1e3a8a;';
                 return 'background: rgba(122,40,40,0.95); border: 1px solid #5a1919; color: #ffffff; box-shadow: 0 0 3px rgba(122,40,40,0.5);';
             };
-
             const b = (id, l) => `<div style="width: 23px; height: 23px; border-radius: 1px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 10.5px; font-family: 'Baekbeom', sans-serif; flex-shrink: 0; padding-bottom: 12px; ${getStyle(seatCounts[id]||0)}">${l}</div>`;
             const eb = (n) => Array(n).fill(`<div style="width: 23px; height: 23px; background: transparent; flex-shrink: 0;"></div>`).join('');
-            
-            const wrap = (name, inn) => `<div style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 2.5px 0;">
-                <span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: right; margin-right: 10px; flex-shrink: 0; padding-bottom: 3px;">${name}</span>
-                <div style="display: flex; gap: 4px; align-items: center; justify-content: center; flex-shrink: 0;">${inn}</div>
-                <span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: left; margin-left: 10px; flex-shrink: 0; padding-bottom: 3px;">${name}</span>
-            </div>`;
-
-            const r = (row, start, end) => {
-                let html = '';
-                for (let i = start; i <= end; i++) html += b(`${row}${i}`, i);
-                return html;
-            };
-
+            const wrap = (name, inn) => `<div style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 2.5px 0;"><span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: right; margin-right: 10px; flex-shrink: 0; padding-bottom: 3px;">${name}</span><div style="display: flex; gap: 4px; align-items: center; justify-content: center; flex-shrink: 0;">${inn}</div><span style="font-size: 13px; color: #5a4b40; width: 18px; font-weight: bold; text-align: left; margin-left: 10px; flex-shrink: 0; padding-bottom: 3px;">${name}</span></div>`;
+            const r = (row, start, end) => { let html = ''; for (let i = start; i <= end; i++) html += b(`${row}${i}`, i); return html; };
             let h = '';
-            
             h += `<div style="width: 320px; background: #3d3530; color: #fff; text-align: center; padding: 0px 0 12px 0; font-size: 14px; font-weight: bold; letter-spacing: 5px; border-radius: 4px; margin-bottom: 15px; box-shadow: 2px 2px 8px rgba(0,0,0,0.4);">S T A G E</div>`;
-
-            h += wrap('A', r('A',1,19) + eb(1));
-            h += wrap('B', r('B',1,19) + eb(1));
-            h += wrap('C', r('C',1,18) + eb(2));
-            h += wrap('D', r('D',1,19) + eb(1));
-            
-            h += `<div style="width: 100%; height: 12px;"></div>`;
-            
-            h += wrap('E', eb(2) + r('E',1,7) + eb(1) + r('E',8,17));
-            h += wrap('F', eb(2) + r('F',1,7) + eb(1) + r('F',8,17));
-            h += wrap('G', eb(2) + r('G',1,7) + eb(1) + r('G',8,17));
-            
-            h += wrap('H', r('H',1,9) + eb(1) + r('H',10,19));
-            h += wrap('I', r('I',1,9) + eb(1) + r('I',10,19));
-            h += wrap('J', r('J',1,9) + eb(1) + r('J',10,19));
-            
-            h += wrap('K', r('K',1,9) + eb(1) + r('K',10,18) + eb(1));
-            h += wrap('L', eb(2) + r('L',1,7) + eb(11));
-
+            h += wrap('A', r('A',1,19) + eb(1)) + wrap('B', r('B',1,19) + eb(1)) + wrap('C', r('C',1,18) + eb(2)) + wrap('D', r('D',1,19) + eb(1)) + `<div style="width: 100%; height: 12px;"></div>`;
+            h += wrap('E', eb(2) + r('E',1,7) + eb(1) + r('E',8,17)) + wrap('F', eb(2) + r('F',1,7) + eb(1) + r('F',8,17)) + wrap('G', eb(2) + r('G',1,7) + eb(1) + r('G',8,17));
+            h += wrap('H', r('H',1,9) + eb(1) + r('H',10,19)) + wrap('I', r('I',1,9) + eb(1) + r('I',10,19)) + wrap('J', r('J',1,9) + eb(1) + r('J',10,19));
+            h += wrap('K', r('K',1,9) + eb(1) + r('K',10,18) + eb(1)) + wrap('L', eb(2) + r('L',1,7) + eb(11));
             return h;
         }
 
         function renderAll() {
             document.getElementById('globalCouponCount').innerText = `${appData.coupons}장`;
             document.getElementById('globalOstCount').innerText = `${appData.ostTickets}장`;
+            document.getElementById('globalOtherCouponCount').innerText = `${appData.otherCoupons}장`;
 
             const cb = document.getElementById('cardContainer'); cb.innerHTML = '';
             appData.cards.forEach((c, i) => {
@@ -1381,28 +1098,26 @@
             if(ordGrps.length === 0) tbody.innerHTML = `<tr><td class="p-8 text-center text-slate-400">등록된 일지가 없습니다.</td></tr>`;
             else ordGrps.slice().reverse().forEach(g => {
                 const main = g.records[0], cStr = g.records.map(r => { const cIdx = appData.cards.findIndex(c => c.id === r.cardId); return cIdx > -1 ? `판 #${cIdx + 1}` : '삭제됨'; }).map(n => `<span class="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[9px] mr-1">[${n}]</span>`).join('');
-                const qStr = g.records.map(r => `+${r.qty}`).join(', '), usedCp = g.records.some(r => r.useCoupon);
-                tbody.innerHTML += `<tr class="hover:bg-slate-50 transition"><td class="py-3 px-1"><div class="flex justify-between items-start mb-1"><div class="font-bold text-slate-800 flex items-center flex-wrap gap-y-1"><span class="bg-stone-200 text-stone-700 px-1.5 py-0.5 rounded text-[9px] mr-1 font-bold">[자${sMap[g.gid]}]</span>${cStr}<span class="ml-0.5">${main.date} <span class="text-py-500 text-[10px] font-bold">${main.time}</span></span></div><div class="flex gap-1.5 items-center pl-2">${usedCp ? '<span class="bg-amber-100 text-amber-800 text-[9px] font-bold px-1 rounded flex-shrink-0">할인</span>' : ''}<span class="text-py-500 font-bold whitespace-nowrap">${qStr}</span></div></div><div class="flex justify-between items-center text-slate-600 mt-1"><span>${main.parkyeol}, ${main.fumiko}, ${main.ryuji}</span><div class="flex gap-3 items-center"><span class="font-bold text-py-900">${main.seat}</span><div class="flex gap-1.5"><button onclick="editRecord(${main.id})" class="text-[10px] bg-slate-100 text-slate-500 hover:bg-amber-100 hover:text-amber-600 px-1.5 py-0.5 rounded transition">수정</button><button onclick="deleteRecord(${main.id})" class="text-[10px] bg-slate-100 text-slate-500 hover:bg-rose-100 hover:text-rose-600 px-1.5 py-0.5 rounded transition">삭제</button></div></div></div></td></tr>`;            });
+                const qStr = g.records.map(r => `+${r.qty}`).join(', ');
+                
+                const used40 = g.records.some(r => r.couponType === '40' || r.useCoupon);
+                const usedOther = g.records.some(r => r.couponType === 'other');
+                let cpBadge = '';
+                if(used40) cpBadge += '<span class="bg-amber-100 text-amber-800 text-[9px] font-bold px-1 rounded flex-shrink-0 mr-0.5">40%할인</span>';
+                if(usedOther) cpBadge += '<span class="bg-purple-100 text-purple-800 text-[9px] font-bold px-1 rounded flex-shrink-0 mr-0.5">기타할인</span>';
+
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 transition"><td class="py-3 px-1"><div class="flex justify-between items-start mb-1"><div class="font-bold text-slate-800 flex items-center flex-wrap gap-y-1"><span class="bg-stone-200 text-stone-700 px-1.5 py-0.5 rounded text-[9px] mr-1 font-bold">[자${sMap[g.gid]}]</span>${cStr}<span class="ml-0.5">${main.date} <span class="text-py-500 text-[10px] font-bold">${main.time}</span></span></div><div class="flex gap-1.5 items-center pl-2">${cpBadge}<span class="text-py-500 font-bold whitespace-nowrap">${qStr}</span></div></div><div class="flex justify-between items-center text-slate-600 mt-1"><span>${main.parkyeol}, ${main.fumiko}, ${main.ryuji}</span><div class="flex gap-3 items-center"><span class="font-bold text-py-900">${main.seat}</span><div class="flex gap-1.5"><button onclick="editRecord(${main.id})" class="text-[10px] bg-slate-100 text-slate-500 hover:bg-amber-100 hover:text-amber-600 px-1.5 py-0.5 rounded transition">수정</button><button onclick="deleteRecord(${main.id})" class="text-[10px] bg-slate-100 text-slate-500 hover:bg-rose-100 hover:text-rose-600 px-1.5 py-0.5 rounded transition">삭제</button></div></div></div></td></tr>`;            });
             
-            generateHeatmap(); 
-            calculateStatsSheet();
-            renderCalendar();
+            generateHeatmap(); calculateStatsSheet(); renderCalendar();
         }
 
         window.onload = async function() { 
             const today = new Date();
-            let yyyy = today.getFullYear();
-            let mm = String(today.getMonth() + 1).padStart(2, '0');
-            let dd = String(today.getDate()).padStart(2, '0');
+            let yyyy = today.getFullYear(), mm = String(today.getMonth() + 1).padStart(2, '0'), dd = String(today.getDate()).padStart(2, '0');
             let defaultDate = `${yyyy}-${mm}-${dd}`;
-            
-            if (defaultDate < '2026-06-10') defaultDate = '2026-06-10';
-            if (defaultDate > '2026-09-06') defaultDate = '2026-09-06';
-            
+            if (defaultDate < '2026-06-10') defaultDate = '2026-06-10'; if (defaultDate > '2026-09-06') defaultDate = '2026-09-06';
             document.getElementById('perfDate').value = defaultDate;
-            await loadScheduleFromGoogleSheet();
-            handleDateChange();
-            renderAll(); 
+            await loadScheduleFromGoogleSheet(); handleDateChange(); renderAll(); 
         };
     </script>
 </body>
