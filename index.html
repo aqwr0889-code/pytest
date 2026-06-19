@@ -91,19 +91,19 @@
                 <p class="text-py-200 text-xs mt-1">2026-06-10 ~ 2026-09-06 | 링크아트센터드림 드림4관</p>
                 
                 <div class="mt-3 flex items-center gap-2 relative flex-wrap">
-                    <button onclick="exportData()" class="text-[10px] bg-py-800 border border-py-700 hover:bg-py-700 h-7 rounded text-py-100 transition w-24 flex items-center justify-center font-medium">
-                        <i class="fa-solid fa-download mr-1.5"></i>데이터 백업
+                    <button onclick="exportData()" class="text-[10px] bg-py-800 border border-py-700 hover:bg-py-700 px-2.5 py-1 rounded text-py-100 transition flex items-center font-medium">
+                        <i class="fa-solid fa-download mr-1"></i>데이터 백업
                     </button>
-                    <label class="cursor-pointer text-[10px] bg-py-800 border border-py-700 hover:bg-py-700 h-7 rounded text-py-100 transition w-24 flex items-center justify-center font-medium m-0">
-                        <i class="fa-solid fa-upload mr-1.5"></i>데이터 복원
+                    <label class="cursor-pointer text-[10px] bg-py-800 border border-py-700 hover:bg-py-700 px-2.5 py-1 rounded text-py-100 transition flex items-center font-medium m-0">
+                        <i class="fa-solid fa-upload mr-1"></i>데이터 복원
                         <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
                     </label>
-                    <button onclick="fullReset()" class="text-[10px] bg-rose-900/30 border border-rose-800/50 hover:bg-rose-700 hover:text-white h-7 rounded text-rose-200 transition w-24 flex items-center justify-center font-medium">
-                        <i class="fa-solid fa-rotate-right mr-1.5"></i>전체 리셋
+                    <button onclick="fullReset()" class="text-[10px] bg-rose-900/30 border border-rose-800/50 hover:bg-rose-700 hover:text-white px-2.5 py-1 rounded text-rose-200 transition flex items-center font-medium">
+                        <i class="fa-solid fa-rotate-right mr-1"></i>전체 리셋
                     </button>
 
                     <div class="relative group inline-block">
-                        <button class="text-py-300 hover:text-white text-xs p-1 focus:outline-none flex items-center justify-center h-7">
+                        <button class="text-py-300 hover:text-white text-xs p-1 focus:outline-none flex items-center justify-center">
                             <i class="fa-solid fa-circle-info"></i>
                         </button>
                         <div class="absolute top-full right-0 md:left-0 md:right-auto mt-2 w-[280px] max-w-[85vw] bg-slate-950 text-slate-200 text-[11px] p-3 rounded-xl shadow-xl border border-slate-700 hidden group-hover:block z-50 space-y-1.5 leading-relaxed text-left">
@@ -120,14 +120,14 @@
 
             <div class="grid grid-cols-3 gap-2 md:gap-3 w-full md:w-auto mt-2 md:mt-0">
                 
-                <div class="bg-py-900 border border-py-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner relative group flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px]">
-                    <span class="text-[10px] md:text-[11px] block text-py-300 font-medium mb-1">기타 할인권</span>
-                    <span id="globalOtherCouponCount" class="text-sm md:text-lg font-bold text-py-200 leading-none mt-auto">0장</span>
+                <div tabindex="0" onclick="const ov = document.getElementById('otherCouponOverlay'); ov.classList.toggle('hidden'); ov.classList.toggle('flex');" class="bg-py-900 border border-py-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner relative group flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px] cursor-pointer focus:outline-none">
+                    <span class="text-[10px] md:text-[11px] block text-py-300 font-medium mb-1 pointer-events-none">기타 할인권</span>
+                    <span id="globalOtherCouponCount" class="text-sm md:text-lg font-bold text-py-200 leading-none mt-auto pointer-events-none">0장</span>
                     
-                    <div class="absolute inset-0 bg-py-900/95 hidden group-hover:flex items-center justify-center rounded-xl gap-2 backdrop-blur-sm border border-py-700">
-                        <button onclick="adjustTicket('otherCoupons', -1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-rose-500 transition flex items-center justify-center">-</button>
+                    <div id="otherCouponOverlay" class="absolute inset-0 bg-py-900/95 hidden md:group-hover:flex items-center justify-center rounded-xl gap-2 backdrop-blur-sm border border-py-700">
+                        <button onclick="adjustTicket('otherCoupons', -1); event.stopPropagation();" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-rose-500 transition flex items-center justify-center">-</button>
                         <span id="hoverOtherCouponCount" class="text-xs font-bold text-purple-300 min-w-[12px] text-center">0</span>
-                        <button onclick="adjustTicket('otherCoupons', 1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-emerald-500 transition flex items-center justify-center">+</button>
+                        <button onclick="adjustTicket('otherCoupons', 1); event.stopPropagation();" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-emerald-500 transition flex items-center justify-center">+</button>
                     </div>
                 </div>
                 
@@ -140,7 +140,6 @@
                     <span class="text-[10px] md:text-[11px] block text-py-300 font-medium mb-1">OST 교환권</span>
                     <span id="globalOstCount" class="text-sm md:text-lg font-bold text-amber-400 leading-none mt-auto">0장</span>
                 </div>
-
             </div>
         </header>
 
