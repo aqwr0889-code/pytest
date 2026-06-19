@@ -119,7 +119,7 @@
 
                 <div class="bg-py-900 border border-py-700 px-4 py-2 rounded-xl text-center shadow-inner relative group min-w-[110px] flex-shrink-0">
                     <span class="text-[11px] block text-py-300 font-medium">기타 할인권</span>
-                    <span id="globalOtherCouponCount" class="text-lg font-bold text-purple-400">0장</span>
+                    <span id="globalOtherCouponCount" class="text-lg font-bold text-py-200">0장</span>
                     <div class="absolute inset-0 bg-py-900/90 hidden group-hover:flex items-center justify-center rounded-xl gap-2 backdrop-blur-sm border border-py-700">
                         <button onclick="adjustTicket('otherCoupons', -1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-rose-500 transition">-</button>
                         <button onclick="adjustTicket('otherCoupons', 1)" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-emerald-500 transition">+</button>
@@ -1400,6 +1400,7 @@
             document.getElementById('perfDate').value = defaultDate;
             await loadScheduleFromGoogleSheet();
             handleDateChange();
+            recalculateState();
             renderAll(); 
         };
     </script>
