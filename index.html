@@ -119,16 +119,16 @@
             </div>
 
             <div class="grid grid-cols-3 gap-2 md:gap-3 w-full md:w-auto mt-2 md:mt-0">
-                <div onclick="openTicketModal('other')" class="bg-prt-900 border border-prt-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px] cursor-pointer hover:bg-prt-800 transition">
-                    <span class="text-[10px] md:text-[11px] block text-prt-300 font-medium mb-1 pointer-events-none">기타 할인권</span>
-                    <span id="globalOtherCouponCount" class="text-sm md:text-lg font-bold text-prt-200 leading-none mt-auto pointer-events-none">0장</span>
+                <div onclick="openTicketModal('other')" class="bg-py-900 border border-py-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px] cursor-pointer hover:bg-py-800 transition">
+                    <span class="text-[10px] md:text-[11px] block text-py-300 font-medium mb-1 pointer-events-none">기타 할인권</span>
+                    <span id="globalOtherCouponCount" class="text-sm md:text-lg font-bold text-py-200 leading-none mt-auto pointer-events-none">0장</span>
                 </div>
-                <div onclick="openTicketModal('coupon')" class="bg-prt-900 border border-prt-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px] cursor-pointer hover:bg-prt-800 transition">
-                    <span class="text-[10px] md:text-[11px] block text-prt-300 font-medium mb-1 pointer-events-none">재관람 할인권</span>
-                    <span id="globalCouponCount" class="text-sm md:text-lg font-bold text-prt-400 leading-none mt-auto pointer-events-none">0장</span>
+                <div onclick="openTicketModal('coupon')" class="bg-py-900 border border-py-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px] cursor-pointer hover:bg-py-800 transition">
+                    <span class="text-[10px] md:text-[11px] block text-py-300 font-medium mb-1 pointer-events-none">40% 할인권</span>
+                    <span id="globalCouponCount" class="text-sm md:text-lg font-bold text-py-400 leading-none mt-auto pointer-events-none">0장</span>
                 </div>
-                <div onclick="openTicketModal('ost')" class="bg-prt-900 border border-prt-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px] cursor-pointer hover:bg-prt-800 transition">
-                    <span class="text-[10px] md:text-[11px] block text-prt-300 font-medium mb-1 pointer-events-none">특별 혜택권</span>
+                <div onclick="openTicketModal('ost')" class="bg-py-900 border border-py-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px] cursor-pointer hover:bg-py-800 transition">
+                    <span class="text-[10px] md:text-[11px] block text-py-300 font-medium mb-1 pointer-events-none">7회차 교환권</span>
                     <span id="globalOstCount" class="text-sm md:text-lg font-bold text-amber-400 leading-none mt-auto pointer-events-none">0장</span>
                 </div>
             </div>
@@ -431,16 +431,16 @@
             <h3 id="ticketModalTitle" class="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">티켓 관리</h3>
             <p id="ticketModalStatus" class="text-[11px] text-slate-500 mb-4 bg-slate-50 p-2 rounded-lg border border-slate-100 font-medium"></p>
             
-            <form onsubmit="addTicketHistory(event)" class="mb-5 flex flex-col gap-2 bg-prt-50 p-3 rounded-xl border border-prt-100 shadow-inner">
+            <form onsubmit="addTicketHistory(event)" class="mb-5 flex flex-col gap-2 bg-py-50 p-3 rounded-xl border border-py-100 shadow-inner">
                 <div class="flex gap-2">
-                    <select id="ticketOp" class="w-[85px] border border-prt-200 p-2 rounded-lg text-xs focus:outline-none focus:border-prt-500 font-bold bg-white text-slate-700">
+                    <select id="ticketOp" class="w-[85px] border border-py-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 font-bold bg-white text-slate-700">
                         <option value="plus">➕ 추가</option>
                         <option value="minus">➖ 차감</option>
                     </select>
-                    <input type="number" id="ticketQty" min="1" placeholder="수량" required class="flex-1 min-w-0 border border-prt-200 p-2 rounded-lg text-xs focus:outline-none focus:border-prt-500 bg-white">
+                    <input type="number" id="ticketQty" min="1" placeholder="수량" required class="flex-1 min-w-0 border border-py-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 bg-white">
                 </div>
-                <input type="text" id="ticketNote" placeholder="비고 입력 (예: 교환, 나눔 등)" required class="w-full border border-prt-200 p-2 rounded-lg text-xs focus:outline-none focus:border-prt-500 bg-white">
-                <button type="submit" class="w-full bg-prt-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-prt-700 transition">내역 저장하기</button>
+                <input type="text" id="ticketNote" placeholder="비고 입력 (예: 교환, 나눔 등)" required class="w-full border border-py-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 bg-white">
+                <button type="submit" class="w-full bg-py-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-py-700 transition">내역 저장하기</button>
             </form>
 
             <div class="flex-grow overflow-y-auto pr-1">
@@ -681,7 +681,7 @@
         function fullReset() { if(confirm("정말 모두 초기화하시겠습니까?")) { appData = { cards: [{ id: Date.now(), stamps: 0, isActive: true }], coupons: 0, ostTickets: 0, records: [], baseOtherCoupons: 0 }; saveData(); alert('초기화 완료'); } }
         
         let currentTicketType = '';
-        const ticketNames = { 'coupon': '🎟️ 재관람 할인권', 'ost': '🎁 특별 혜택권', 'other': '🎫 기타 할인권' };
+        const ticketNames = { 'coupon': '🎟️ 40% 할인권', 'ost': '💿 OST 교환권', 'other': '🎫 기타 할인권' };
 
         function openTicketModal(type) {
             currentTicketType = type;
