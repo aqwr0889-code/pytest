@@ -119,26 +119,17 @@
             </div>
 
             <div class="grid grid-cols-3 gap-2 md:gap-3 w-full md:w-auto mt-2 md:mt-0">
-                
-                <div tabindex="0" onclick="const ov = document.getElementById('otherCouponOverlay'); ov.classList.toggle('hidden'); ov.classList.toggle('flex');" class="bg-py-900 border border-py-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner relative group flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px] cursor-pointer focus:outline-none">
-                    <span class="text-[10px] md:text-[11px] block text-py-300 font-medium mb-1 pointer-events-none">기타 할인권</span>
-                    <span id="globalOtherCouponCount" class="text-sm md:text-lg font-bold text-py-200 leading-none mt-auto pointer-events-none">0장</span>
-                    
-                    <div id="otherCouponOverlay" class="absolute inset-0 bg-py-900/95 hidden md:group-hover:flex items-center justify-center rounded-xl gap-2 backdrop-blur-sm border border-py-700">
-                        <button onclick="adjustTicket('otherCoupons', -1); event.stopPropagation();" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-rose-500 transition flex items-center justify-center">-</button>
-                        <span id="hoverOtherCouponCount" class="text-xs font-bold text-py-100 min-w-[12px] text-center">0</span>
-                        <button onclick="adjustTicket('otherCoupons', 1); event.stopPropagation();" class="w-6 h-6 bg-py-700 text-white rounded-full text-xs hover:bg-emerald-500 transition flex items-center justify-center">+</button>
-                    </div>
+                <div onclick="openTicketModal('other')" class="bg-prt-900 border border-prt-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px] cursor-pointer hover:bg-prt-800 transition">
+                    <span class="text-[10px] md:text-[11px] block text-prt-300 font-medium mb-1 pointer-events-none">기타 할인권</span>
+                    <span id="globalOtherCouponCount" class="text-sm md:text-lg font-bold text-prt-200 leading-none mt-auto pointer-events-none">0장</span>
                 </div>
-                
-                <div class="bg-py-900 border border-py-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px]">
-                    <span class="text-[10px] md:text-[11px] block text-py-300 font-medium mb-1">40% 할인권</span>
-                    <span id="globalCouponCount" class="text-sm md:text-lg font-bold text-py-400 leading-none mt-auto">0장</span>
+                <div onclick="openTicketModal('coupon')" class="bg-prt-900 border border-prt-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px] cursor-pointer hover:bg-prt-800 transition">
+                    <span class="text-[10px] md:text-[11px] block text-prt-300 font-medium mb-1 pointer-events-none">재관람 할인권</span>
+                    <span id="globalCouponCount" class="text-sm md:text-lg font-bold text-prt-400 leading-none mt-auto pointer-events-none">0장</span>
                 </div>
-
-                <div class="bg-py-900 border border-py-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px]">
-                    <span class="text-[10px] md:text-[11px] block text-py-300 font-medium mb-1">OST 교환권</span>
-                    <span id="globalOstCount" class="text-sm md:text-lg font-bold text-amber-400 leading-none mt-auto">0장</span>
+                <div onclick="openTicketModal('ost')" class="bg-prt-900 border border-prt-700 px-2 py-2 md:px-4 md:py-2 rounded-xl text-center shadow-inner flex flex-col justify-center items-center min-w-[95px] md:min-w-[110px] cursor-pointer hover:bg-prt-800 transition">
+                    <span class="text-[10px] md:text-[11px] block text-prt-300 font-medium mb-1 pointer-events-none">특별 혜택권</span>
+                    <span id="globalOstCount" class="text-sm md:text-lg font-bold text-amber-400 leading-none mt-auto pointer-events-none">0장</span>
                 </div>
             </div>
         </header>
@@ -434,6 +425,31 @@
 
     <div id="export-container" style="position: fixed; top: 0; left: -9999px; width: 1400px; height: auto; z-index: -9999; font-family: 'Baekbeom', sans-serif; pointer-events: none;"></div>
 
+    <div id="ticketLedgerModal" class="modal-overlay z-[120]" onclick="if(event.target === this) closeTicketModal()">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm flex flex-col shadow-2xl relative max-h-[90vh]">
+            <button onclick="closeTicketModal()" class="absolute top-4 right-4 text-slate-400 hover:text-rose-500 transition text-xl px-2"><i class="fa-solid fa-times"></i></button>
+            <h3 id="ticketModalTitle" class="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">티켓 관리</h3>
+            <p id="ticketModalStatus" class="text-[11px] text-slate-500 mb-4 bg-slate-50 p-2 rounded-lg border border-slate-100 font-medium"></p>
+            
+            <form onsubmit="addTicketHistory(event)" class="mb-5 flex flex-col gap-2 bg-prt-50 p-3 rounded-xl border border-prt-100 shadow-inner">
+                <div class="flex gap-2">
+                    <select id="ticketOp" class="w-[85px] border border-prt-200 p-2 rounded-lg text-xs focus:outline-none focus:border-prt-500 font-bold bg-white text-slate-700">
+                        <option value="plus">➕ 추가</option>
+                        <option value="minus">➖ 차감</option>
+                    </select>
+                    <input type="number" id="ticketQty" min="1" placeholder="수량" required class="flex-1 min-w-0 border border-prt-200 p-2 rounded-lg text-xs focus:outline-none focus:border-prt-500 bg-white">
+                </div>
+                <input type="text" id="ticketNote" placeholder="비고 입력 (예: 교환, 나눔 등)" required class="w-full border border-prt-200 p-2 rounded-lg text-xs focus:outline-none focus:border-prt-500 bg-white">
+                <button type="submit" class="w-full bg-prt-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-prt-700 transition">내역 저장하기</button>
+            </form>
+
+            <div class="flex-grow overflow-y-auto pr-1">
+                <h4 class="text-xs font-bold text-slate-700 mb-2 border-b border-slate-100 pb-1.5"><i class="fa-solid fa-clock-rotate-left"></i> 수동 관리 내역</h4>
+                <div id="ticketHistoryList" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
     <footer class="mt-12 mb-8 pt-6 border-t border-slate-200 text-center text-[11px] text-slate-400 leading-relaxed">
         <p class="mb-1 text-slate-500 font-medium">본 사이트는 불령사 회원님들을 지원하기 위해 제작되었으며, 수익 창출을 목적으로 하지 않습니다.</p>
         <p class="mt-3"><span class="inline-block mx-1">Font by paperlogy</span> | <span class="inline-block mx-1">Icons by FontAwesome</span> | <span class="inline-block mx-1">Powered by Tailwind CSS & html2canvas</span></p>
@@ -448,7 +464,14 @@
             appData.cards.forEach(c => c.stamps = 0);
             appData.coupons = 0;
             appData.ostTickets = 0;
-            appData.otherCoupons = appData.baseOtherCoupons || 0;
+            appData.otherCoupons = 0;
+            
+            if(!appData.ticketHistory) appData.ticketHistory = [];
+            appData.ticketHistory.forEach(h => {
+                if(h.type === 'coupon') appData.coupons += h.amount;
+                else if(h.type === 'ost') appData.ostTickets += h.amount;
+                else if(h.type === 'other') appData.otherCoupons += h.amount;
+            });
             
             appData.records.forEach(record => {
                 if (record.useCoupon === true && !record.couponType) record.couponType = '40';
@@ -657,11 +680,89 @@
 
         function fullReset() { if(confirm("정말 모두 초기화하시겠습니까?")) { appData = { cards: [{ id: Date.now(), stamps: 0, isActive: true }], coupons: 0, ostTickets: 0, records: [], baseOtherCoupons: 0 }; saveData(); alert('초기화 완료'); } }
         
-        function adjustTicket(type, amount) { 
-            if (type === 'otherCoupons') {
-                appData.baseOtherCoupons = Math.max(0, (appData.baseOtherCoupons || 0) + amount);
-                saveData(); 
+        let currentTicketType = '';
+        const ticketNames = { 'coupon': '🎟️ 재관람 할인권', 'ost': '🎁 특별 혜택권', 'other': '🎫 기타 할인권' };
+
+        function openTicketModal(type) {
+            currentTicketType = type;
+            document.getElementById('ticketModalTitle').innerHTML = ticketNames[type];
+            renderTicketHistory();
+            document.getElementById('ticketLedgerModal').classList.add('active');
+        }
+
+        function closeTicketModal() {
+            document.getElementById('ticketLedgerModal').classList.remove('active');
+            document.getElementById('ticketQty').value = '';
+            document.getElementById('ticketNote').value = '';
+        }
+
+        function addTicketHistory(e) {
+            e.preventDefault();
+            const op = document.getElementById('ticketOp').value;
+            const qty = parseInt(document.getElementById('ticketQty').value);
+            const note = document.getElementById('ticketNote').value;
+            
+            const amount = op === 'plus' ? qty : -qty;
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+            if (!appData.ticketHistory) appData.ticketHistory = [];
+            appData.ticketHistory.push({
+                id: Date.now(),
+                type: currentTicketType,
+                amount: amount,
+                note: note,
+                date: dateStr
+            });
+            
+            saveData();
+            document.getElementById('ticketQty').value = '';
+            document.getElementById('ticketNote').value = '';
+            renderTicketHistory();
+        }
+
+        function deleteTicketHistory(id) {
+            if(!confirm('이 수동 내역을 장부에서 삭제하시겠습니까?')) return;
+            appData.ticketHistory = appData.ticketHistory.filter(h => h.id !== id);
+            saveData();
+            renderTicketHistory();
+        }
+
+        function renderTicketHistory() {
+            const list = document.getElementById('ticketHistoryList');
+            if (!appData.ticketHistory) appData.ticketHistory = [];
+            const history = appData.ticketHistory.filter(h => h.type === currentTicketType).reverse();
+            
+            let autoStr = '';
+            if(currentTicketType === 'coupon') {
+                const used = appData.records.filter(r => r.couponType === '40').length;
+                autoStr = used > 0 ? `(관극 기록에서 ${used}장 사용 완료)` : `(현재 사용 이력 없음)`;
+            } else if(currentTicketType === 'other') {
+                const used = appData.records.filter(r => r.couponType === 'other').length;
+                autoStr = used > 0 ? `(관극 기록에서 ${used}장 사용 완료)` : `(현재 사용 이력 없음)`;
             }
+
+            const currentTotal = currentTicketType === 'coupon' ? appData.coupons : currentTicketType === 'ost' ? appData.ostTickets : appData.otherCoupons;
+            document.getElementById('ticketModalStatus').innerText = `✅ 현재 최종 보유량: ${currentTotal}장 ${autoStr}`;
+
+            if(history.length === 0) {
+                list.innerHTML = `<div class="text-center text-slate-400 text-xs py-5 bg-slate-50 rounded-lg border border-slate-100">수동으로 추가/차감한 이력이 없습니다.</div>`;
+                return;
+            }
+
+            list.innerHTML = history.map(h => `
+                <div class="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200 shadow-sm gap-2 transition hover:bg-slate-50">
+                    <div class="flex flex-col gap-1 w-full min-w-0">
+                        <div class="flex items-center gap-1.5">
+                            <span class="${h.amount > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'} text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap">${h.amount > 0 ? '➕추가' : '➖차감'}</span>
+                            <span class="text-xs font-bold text-slate-800">${Math.abs(h.amount)}장</span>
+                            <span class="text-[9px] text-slate-400 ml-auto whitespace-nowrap">${h.date}</span>
+                        </div>
+                        <span class="text-[11px] text-slate-600 truncate font-medium"><i class="fa-solid fa-angle-right text-slate-300 mr-1"></i>${h.note}</span>
+                    </div>
+                    <button onclick="deleteTicketHistory(${h.id})" class="text-slate-300 hover:text-rose-500 transition px-2"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                </div>
+            `).join('');
         }
 
         function handleCouponChange(elem) {
