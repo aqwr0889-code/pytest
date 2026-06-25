@@ -432,12 +432,12 @@
             <p id="ticketModalStatus" class="text-[11px] text-slate-500 mb-4 bg-slate-50 p-2 rounded-lg border border-slate-100 font-medium"></p>
             
             <form onsubmit="addTicketHistory(event)" class="mb-5 flex flex-col gap-2 bg-py-50 p-3 rounded-xl border border-py-100 shadow-inner">
-                <div class="flex gap-2">
-                    <select id="ticketOp" class="w-[85px] border border-py-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 font-bold bg-white text-slate-700">
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="ticketOp" class="w-full border border-prt-200 p-2 rounded-lg text-xs focus:outline-none focus:border-prt-500 font-bold bg-white text-slate-700">
                         <option value="plus">➕ 추가</option>
                         <option value="minus">➖ 차감</option>
                     </select>
-                    <input type="number" id="ticketQty" min="1" placeholder="수량" required class="flex-1 min-w-0 border border-py-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 bg-white">
+                    <input type="number" id="ticketQty" min="1" placeholder="수량" required class="w-full min-w-0 border border-prt-200 p-2 rounded-lg text-xs focus:outline-none focus:border-prt-500 bg-white">
                 </div>
                 <input type="text" id="ticketNote" placeholder="비고 입력 (예: 교환, 나눔 등)" required class="w-full border border-py-200 p-2 rounded-lg text-xs focus:outline-none focus:border-py-500 bg-white">
                 <button type="submit" class="w-full bg-py-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-py-700 transition">내역 저장하기</button>
@@ -722,7 +722,7 @@
         }
 
         function deleteTicketHistory(id) {
-            if(!confirm('이 수동 내역을 장부에서 삭제하시겠습니까?')) return;
+            if(!confirm('이 내역을 삭제하시겠습니까?')) return;
             appData.ticketHistory = appData.ticketHistory.filter(h => h.id !== id);
             saveData();
             renderTicketHistory();
@@ -736,17 +736,17 @@
             let autoStr = '';
             if(currentTicketType === 'coupon') {
                 const used = appData.records.filter(r => r.couponType === '40').length;
-                autoStr = used > 0 ? `(관극 기록에서 ${used}장 사용 완료)` : `(현재 사용 이력 없음)`;
+                autoStr = used > 0 ? `(${used}장 차감 완료)` : `(차감 이력 없음)`;
             } else if(currentTicketType === 'other') {
                 const used = appData.records.filter(r => r.couponType === 'other').length;
-                autoStr = used > 0 ? `(관극 기록에서 ${used}장 사용 완료)` : `(현재 사용 이력 없음)`;
+                autoStr = used > 0 ? `(${used}장 차감 완료)` : `(차감 이력 없음)`;
             }
 
             const currentTotal = currentTicketType === 'coupon' ? appData.coupons : currentTicketType === 'ost' ? appData.ostTickets : appData.otherCoupons;
-            document.getElementById('ticketModalStatus').innerText = `✅ 현재 최종 보유량: ${currentTotal}장 ${autoStr}`;
+            document.getElementById('ticketModalStatus').innerText = `✅ 현재 보유량: ${currentTotal}장 ${autoStr}`;
 
             if(history.length === 0) {
-                list.innerHTML = `<div class="text-center text-slate-400 text-xs py-5 bg-slate-50 rounded-lg border border-slate-100">수동으로 추가/차감한 이력이 없습니다.</div>`;
+                list.innerHTML = `<div class="text-center text-slate-400 text-xs py-5 bg-slate-50 rounded-lg border border-slate-100">추가/차감한 이력이 없습니다.</div>`;
                 return;
             }
 
